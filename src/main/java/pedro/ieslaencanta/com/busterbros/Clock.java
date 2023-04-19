@@ -32,13 +32,13 @@ public abstract class Clock implements Runnable {
         this.state = ClockState.STOPED;
     }
 
-    public void start() {
-        if (this.t == null) {
+    public void start()
+	{
+        if (this.t == null)
+		{
             this.t = new Thread(this);
             this.t.start();
             this.state = ClockState.STARTED;
-            //this.board.paintBackground();
-
         }
     }
 
@@ -84,24 +84,33 @@ public abstract class Clock implements Runnable {
     protected abstract void onEvent();
 
     @Override
-    public void run() {
+    public void run()
+	{
         long actual;
-        while (this.state != ClockState.CLOSED) {
-            //  if (this.state == ClockState.STARTED) {
+        while (this.state != ClockState.CLOSED)
+		{
             actual = System.currentTimeMillis();
-            if (actual - this.time > this.delta) {
-
-                try {
+            if (actual - this.time > this.delta)
+			{
+                try
+				{
                     this.inc_counter();
                     this.onEvent();
                     this.time = actual;
 
-                    Thread.sleep((long) this.delta);
-                } catch (InterruptedException ex) {
+                    Thread.sleep((long)this.delta);
+                }
+				catch (InterruptedException ex)
+				{
                     // Logger.getLogger(Clock.class.getName()).log(Level.SEVERE, null, ex);
                 }
+				catch (Exception ex)
+				{
+					stop();
+					t = null;
+					start();
+				}
             }
-            //  }
         }
 
     }
