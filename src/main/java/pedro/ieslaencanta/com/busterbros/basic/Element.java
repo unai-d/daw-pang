@@ -193,9 +193,15 @@ public class Element implements IDebuggable, IDrawable
 		if (image == null || imageUv == null)
 		{
 			gc.setFill(this.color);
-        	gc.fillRect(this.getRectangle().getMinX() * Game.SCALE, this.getRectangle().getMinY() * Game.SCALE, this.getRectangle().getWidth() * Game.SCALE, this.getRectangle().getHeight() * Game.SCALE);
+        	gc.fillRect(
+				this.getRectangle().getMinX() * Game.SCALE,
+				this.getRectangle().getMinY() * Game.SCALE,
+				this.getRectangle().getWidth() * Game.SCALE,
+				this.getRectangle().getHeight() * Game.SCALE
+			);
 			return;
 		}
+		
 		gc.drawImage(
 			image,
 			imageUv.getMinX(),

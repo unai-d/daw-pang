@@ -104,12 +104,6 @@ public abstract class Clock implements Runnable {
 				{
                     // Logger.getLogger(Clock.class.getName()).log(Level.SEVERE, null, ex);
                 }
-				catch (Exception ex)
-				{
-					stop();
-					t = null;
-					start();
-				}
             }
         }
 

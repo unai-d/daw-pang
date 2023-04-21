@@ -13,4 +13,8 @@ public interface IMovable
 	public void moveDown();
 	public void moveDown(double inc);
 	public void stopMovement();
+	public double getXSpeed();
+	public double getYSpeed();
+	public void setXSpeed(double x);
+	public void setYSpeed(double y);
 }

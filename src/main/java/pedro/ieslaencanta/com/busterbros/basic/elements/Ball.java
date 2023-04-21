@@ -36,6 +36,25 @@ public class Ball extends ElementWithGravity
 		}
 	}
 
+	public enum BallColor
+	{
+		RED(0),
+		GREEN(50),
+		BLUE(99);
+
+		int yOffset;
+
+		BallColor(int yOffset)
+		{
+			this.yOffset = yOffset;
+		}
+
+		public static BallColor getRandom()
+		{
+			return BallColor.values()[(int)(Math.random() * 3)];
+		}
+	}
+
 	protected BallSize ballSize = BallSize.BIG;
 
 	public Ball()
@@ -50,10 +69,15 @@ public class Ball extends ElementWithGravity
 
 	public Ball(BallSize ballSize, double x, double y, double w, double h)
 	{
+		this(ballSize, BallColor.getRandom(), x, y, w, h);
+	}
+
+	public Ball(BallSize ballSize, BallColor ballColor, double x, double y, double w, double h)
+	{
 		super();
 		this.ballSize = ballSize;
 		setRectangle(new Rectangle2D(x, y, ballSize.w, ballSize.h));
-		setImageCoordinates(new Rectangle2D(ballSize.x, ballSize.y, ballSize.w, ballSize.h));
+		setImageCoordinates(new Rectangle2D(ballSize.x, ballSize.y + ballColor.yOffset, ballSize.w, ballSize.h));
 		setImage(Resources.getInstance().getImage("ballons"));
 	}
 
@@ -236,6 +260,30 @@ public class Ball extends ElementWithGravity
 		state = s;
 	}
 
+	@Override
+	public double getXSpeed()
+	{
+		return vx;
+	}
+
+	@Override
+	public double getYSpeed()
+	{
+		return vy;
+	}
+
+	@Override
+	public void setXSpeed(double x)
+	{
+		vx = x;
+	}
+
+	@Override
+	public void setYSpeed(double y)
+	{
+		vy = y;
+	}
+
 	public void update()
 	{
 		if (state == State.STARTED)
@@ -245,18 +293,58 @@ public class Ball extends ElementWithGravity
 		}
 		if (rectangle.getMaxY() > App.HEIGHT - 8)
 		{
-			vy *= -0.75;
+			System.out.println(vy + " -> " + (vy * -0.5));
+			vy *= -0.5;
+			if (Math.abs(vy) <= 0.1) vy = 0;
+		}
+		if (rectangle.getMinX() < 8 || rectangle.getMaxX() > App.WIDTH - 8)
+		{
+			vx *= -1;
 		}
 		setPosition(getRectangle().getMinX() + vx, getRectangle().getMinY() + vy);
+	}
+
+	public double getRadiusAtAngle(double angle)
+	{
+		return Math.abs(Math.sin(angle) * ballSize.h + Math.cos(angle) * ballSize.w) / 2;
+	}
+
+	public Point2D getSurfacePositionAtAngle(double angle)
+	{
+		return new Point2D(Math.cos(angle) * ballSize.w / -2, Math.sin(angle) * ballSize.h / -2);
 	}
 
 	@Override
 	public Optional<Collision> collision(Element e)
 	{
-		if (getRectangle().intersects(e.getRectangle()))
+		Collision ret = null;
+
+		var c1 = getCenter();
+		var c2 = e.getCenter();
+		var distanceVector = c1.subtract(c2);
+		double angle = distanceVector.angle(new Point2D(1, 0));
+		angle = angle / 180 * Math.PI;
+
+		// Ball -> Ball
+		if (e instanceof Ball)
 		{
-			return Optional.of(new Collision(this, e));
+			Ball eBall = (Ball)e;
+			var r1 = getRadiusAtAngle(angle);
+			var r2 = eBall.getRadiusAtAngle(angle);
+			if (r1 + r2 > distanceVector.magnitude())
+			{
+				ret = new Collision(this, e);
+				Point2D aSurface = distanceVector.normalize().multiply(-r1);
+				Point2D bSurface = distanceVector.normalize().multiply(r2);
+				ret.setSurfacePoints(aSurface, bSurface);
+			}
 		}
-		return Optional.empty();
+		// Ball -> Generic element.
+		else if (getRectangle().intersects(e.getRectangle()))
+		{
+			ret = new Collision(this, e);
+		}
+		
+		return ret != null ? Optional.of(ret) : Optional.empty();
 	}
 }

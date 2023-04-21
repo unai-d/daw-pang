@@ -5,7 +5,6 @@
 package pedro.ieslaencanta.com.busterbros;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Rectangle2D;
@@ -23,9 +22,7 @@ import pedro.ieslaencanta.com.busterbros.basic.elements.Ball;
 import pedro.ieslaencanta.com.busterbros.basic.elements.BreakableBrick;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Brick;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Ladder;
-import pedro.ieslaencanta.com.busterbros.basic.interfaces.ICollidable;
-
-;
+import pedro.ieslaencanta.com.busterbros.basic.elements.Player;
 
 /**
  * Tablero del juego, posee un fondo (imagen estática, solo se cambia cuando se
@@ -44,11 +41,13 @@ public class Board implements IKeyListener
     private final Dimension2D original_size;
 
     private boolean debug;
+	private boolean physicsEnabled = true;
     private boolean left_press, right_press, up_press, down_press;
     private Level levels[];
     private int actual_level = -1;
     private MediaPlayer backgroundsound;
     private Element[] elements;
+	private Player player;
 
 	private ArrayList<Collision> collisionDataList = new ArrayList<Collision>();
 
@@ -102,7 +101,7 @@ public class Board implements IKeyListener
 
         Pair<Level.ElementType, Rectangle2D>[] fi = this.levels[this.actual_level].getFigures();
 
-        this.elements = new Element[fi.length + ballCount];
+        this.elements = new Element[fi.length + ballCount + 1];
 
 		int i;
         for (i = 0; i < fi.length; i++)
@@ -155,11 +154,15 @@ public class Board implements IKeyListener
 			b.start();
 			elements[i] = b;
 		}
+
+		this.elements[i] = new Player(App.WIDTH / 2, App.HEIGHT - Player.HEIGHT - 8);
+		this.player = (Player)elements[i];
     }
 
     public void setGraphicsContext(GraphicsContext gc)
 	{
         this.gc = gc;
+		gc.setImageSmoothing(false);
     }
 
     public void setBackGroundGraphicsContext(GraphicsContext gc)
@@ -200,17 +203,24 @@ public class Board implements IKeyListener
 					{
 						Collision col = collisionData.get();
 
-						if (col.getA() instanceof ElementMovable && col.getB() instanceof ElementMovable)
+						if (physicsEnabled)
 						{
-							var amov = (ElementMovable)col.getA();
-							var bmov = (ElementMovable)col.getB();
-							var c1 = amov.getCenter();
-							var c2 = bmov.getCenter();
+							var c1 = col.getA().getCenter();
+							var c2 = col.getB().getCenter();
 							var directionVector = c1.subtract(c2);
-							amov.stopMovement();
-							bmov.stopMovement();
-							amov.move(directionVector.getX(), directionVector.getY());
-							bmov.move(-directionVector.getX(), -directionVector.getY());
+
+							if (col.getA() instanceof ElementMovable && col.getB() instanceof ElementMovable)
+							{
+								var amov = (ElementMovable)col.getA();
+								var bmov = (ElementMovable)col.getB();
+								amov.move(directionVector.getX(), directionVector.getY(), 0.1);
+								bmov.move(-directionVector.getX(), -directionVector.getY(), 0.1);
+							}
+							else if (col.getA() instanceof ElementMovable)
+							{
+								//var amov = (ElementMovable)col.getA();
+								//amov.move(directionVector.getX(), directionVector.getY());
+							}
 						}
 
 						collisionDataList.add(col);
@@ -245,12 +255,16 @@ public class Board implements IKeyListener
 	{
         if (this.left_press)
 		{
-
+			player.setXSpeed(-1);
         }
 		else if (this.right_press)
 		{
-
+			player.setXSpeed(1);
         }
+		else
+		{
+			player.setXSpeed(0);
+		}
         if (this.up_press)
 		{
 
@@ -340,6 +354,10 @@ public class Board implements IKeyListener
 					if (e == null) break;
 					e.setDebug(!e.isDebug());
 				}
+				break;
+
+			case P:
+				physicsEnabled = !physicsEnabled;
 				break;
 
 			default:
