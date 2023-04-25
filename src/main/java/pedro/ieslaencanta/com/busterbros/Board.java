@@ -157,6 +157,9 @@ public class Board implements IKeyListener
 
 		this.elements[i] = new Player(App.WIDTH / 2, App.HEIGHT - Player.HEIGHT - 8);
 		this.player = (Player)elements[i];
+		this.player.activeGravity();
+		this.player.setVerticalGravity(0.25);
+		this.player.start();
     }
 
     public void setGraphicsContext(GraphicsContext gc)
@@ -186,6 +189,8 @@ public class Board implements IKeyListener
 	{
 		collisionDataList.clear();
 
+		boolean playerIsInsideLadder = false;
+
 		for (var e : elements)
 		{
 			if (e == null) break;
@@ -202,24 +207,42 @@ public class Board implements IKeyListener
 					if (collisionData.isPresent())
 					{
 						Collision col = collisionData.get();
+						var a = col.getA();
+						var b = col.getB();
 
+						// Update objects status based on collision data.
 						if (physicsEnabled)
 						{
-							var c1 = col.getA().getCenter();
-							var c2 = col.getB().getCenter();
+							var c1 = a.getCenter();
+							var c2 = b.getCenter();
 							var directionVector = c1.subtract(c2);
 
-							if (col.getA() instanceof ElementMovable && col.getB() instanceof ElementMovable)
+							if (a instanceof ElementMovable && b instanceof ElementMovable)
 							{
-								var amov = (ElementMovable)col.getA();
-								var bmov = (ElementMovable)col.getB();
-								amov.move(directionVector.getX(), directionVector.getY(), 0.1);
-								bmov.move(-directionVector.getX(), -directionVector.getY(), 0.1);
+								var amov = (ElementMovable)a;
+								var bmov = (ElementMovable)b;
+								amov.setSpeed(directionVector.getX(), directionVector.getY(), 0.1);
+								bmov.setSpeed(-directionVector.getX(), -directionVector.getY(), 0.1);
 							}
-							else if (col.getA() instanceof ElementMovable)
+							else if (b instanceof Brick || b instanceof BreakableBrick)
 							{
-								//var amov = (ElementMovable)col.getA();
-								//amov.move(directionVector.getX(), directionVector.getY());
+								double lerp = (1.0 / directionVector.magnitude()) * 2.0;
+								var amov = (ElementMovable)a;
+								amov.setSpeed(directionVector.getX(), directionVector.getY(), lerp);
+								//System.out.println(lerp);
+							}
+						}
+
+						// Player-specific events (e. g.: ladder climbing).
+						if (e == player)
+						{
+							if (e2 instanceof Ladder) // Player is on ladder.
+							{
+								playerIsInsideLadder = true;
+								if (!player.getClimbingLadderMode())
+								{
+									if (up_press || down_press) player.setClimbingLadderMode(true);
+								}
 							}
 						}
 
@@ -227,6 +250,11 @@ public class Board implements IKeyListener
 					}
 				}
 			}
+		}
+
+		if (!playerIsInsideLadder && player.getClimbingLadderMode())
+		{
+			player.setClimbingLadderMode(false);
 		}
     }
 
@@ -238,7 +266,7 @@ public class Board implements IKeyListener
             for (int i = 0; i < this.elements.length; i++)
 			{
                 this.elements[i].paint(gc);
-				if (this.elements[i].isDebug())
+				if (this.elements[i].isDebug() || debug)
 				{
 					this.elements[i].debug(gc);
 				}
@@ -253,26 +281,12 @@ public class Board implements IKeyListener
 
     private void process_input()
 	{
-        if (this.left_press)
-		{
-			player.setXSpeed(-1);
-        }
-		else if (this.right_press)
-		{
-			player.setXSpeed(1);
-        }
-		else
-		{
-			player.setXSpeed(0);
-		}
-        if (this.up_press)
-		{
+		double dx = left_press ? -1 : (right_press ? 1 : 0);
+		double dy = up_press ? -1 : (down_press ? 1 : 0);
+		dx *= 2;
+		dy *= 2;
 
-        }
-        if (this.down_press)
-		{
-
-        }
+        player.moveAsPlayerInput(dx, dy);
     }
 
     /**
@@ -349,6 +363,7 @@ public class Board implements IKeyListener
 				break;
 
 			case D:
+				debug = !debug;
 				for (var e : elements)
 				{
 					if (e == null) break;

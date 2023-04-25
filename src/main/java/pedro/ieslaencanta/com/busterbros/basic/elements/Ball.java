@@ -81,209 +81,6 @@ public class Ball extends ElementWithGravity
 		setImage(Resources.getInstance().getImage("ballons"));
 	}
 
-	@Override
-	public boolean isActive()
-	{
-		return isActiveHorizontalGravity() && isActiveVerticalGravity();
-	}
-
-	@Override
-	public boolean isActiveHorizontalGravity()
-	{
-		return activeHorizontalGravity;
-	}
-
-	@Override
-	public boolean isActiveVerticalGravity()
-	{
-		return activeVerticalGravity;
-	}
-
-	@Override
-	public void activeGravity()
-	{
-		activeHorizontalGravity();
-		activeVerticalGravity();
-	}
-
-	@Override
-	public void activeHorizontalGravity()
-	{
-		activeHorizontalGravity = true;
-	}
-
-	@Override
-	public void activeVerticalGravity()
-	{
-		activeVerticalGravity = true;
-	}
-
-	@Override
-	public void unactiveGravity()
-	{
-		unactiveHorizontalGravity();
-		unactiveVerticalGravity();
-	}
-
-	@Override
-	public void unactiveHorizontalGravity()
-	{
-		activeHorizontalGravity = false;
-	}
-
-	@Override
-	public void unactiveVerticalGravity()
-	{
-		activeVerticalGravity = false;
-	}
-
-	@Override
-	public void setHorizontalGravity(double gravity)
-	{
-		gx = gravity;
-	}
-
-	@Override
-	public void setVerticalGravity(double gravity)
-	{
-		gy = gravity;
-	}
-
-	@Override
-	public double getHorizontalGravity()
-	{
-		return gx;
-	}
-
-	@Override
-	public double getVerticalGravity()
-	{
-		return gy;
-	}
-
-	@Override
-	public void move(double x, double y)
-	{
-		setPosition(rectangle.getMinX() + x, rectangle.getMinY() + y);
-	}
-
-	@Override
-	public void move(double x, double y, double lerp)
-	{
-		var moveVector = new Point2D(vx, vy).interpolate(new Point2D(x, y), lerp);
-		vx = moveVector.getX();
-		vy = moveVector.getY();
-	}
-
-	@Override
-	public void stopMovement()
-	{
-		vx = 0;
-		vy = 0;
-	}
-
-	@Override
-	public void moveLeft()
-	{
-		moveLeft(1);
-	}
-
-	@Override
-	public void moveLeft(double inc)
-	{
-		setPosition(rectangle.getMinX() + inc, rectangle.getMinY());
-	}
-
-	@Override
-	public void moveRight()
-	{
-		moveRight(1);
-	}
-
-	@Override
-	public void moveRight(double inc)
-	{
-		setPosition(rectangle.getMinX() - 1, rectangle.getMinY());
-	}
-
-	@Override
-	public void moveUp()
-	{
-		moveUp(1);
-	}
-
-	@Override
-	public void moveUp(double inc)
-	{
-		setPosition(rectangle.getMinX(), rectangle.getMinY() - inc);
-	}
-
-	@Override
-	public void moveDown()
-	{
-		moveDown(1);
-	}
-
-	@Override
-	public void moveDown(double inc)
-	{
-		setPosition(rectangle.getMinX(), rectangle.getMinY() + inc);
-	}
-
-	@Override
-	public void start()
-	{
-		state = State.STARTED;
-	}
-
-	@Override
-	public void stop()
-	{
-		state = State.STOPPED;
-	}
-
-	@Override
-	public void pause()
-	{
-		state = State.PAUSED;
-	}
-
-	@Override
-	public State getState()
-	{
-		return state;
-	}
-
-	@Override
-	public void setState(State s)
-	{
-		state = s;
-	}
-
-	@Override
-	public double getXSpeed()
-	{
-		return vx;
-	}
-
-	@Override
-	public double getYSpeed()
-	{
-		return vy;
-	}
-
-	@Override
-	public void setXSpeed(double x)
-	{
-		vx = x;
-	}
-
-	@Override
-	public void setYSpeed(double y)
-	{
-		vy = y;
-	}
-
 	public void update()
 	{
 		if (state == State.STARTED)
@@ -291,15 +88,15 @@ public class Ball extends ElementWithGravity
 			if (activeVerticalGravity) vy += gy;
 			if (activeHorizontalGravity) vx += gx;
 		}
-		if (rectangle.getMaxY() > App.HEIGHT - 8)
+		if ((y + height) > App.HEIGHT - 8)
 		{
-			System.out.println(vy + " -> " + (vy * -0.5));
+			//System.out.println(vy + " -> " + (vy * -0.5));
 			vy *= -0.5;
 			if (Math.abs(vy) <= 0.1) vy = 0;
 		}
-		if (rectangle.getMinX() < 8 || rectangle.getMaxX() > App.WIDTH - 8)
+		if (x < 8 || (x + width) > App.WIDTH - 8)
 		{
-			vx *= -1;
+			vx *= -0.75;
 		}
 		setPosition(getRectangle().getMinX() + vx, getRectangle().getMinY() + vy);
 	}

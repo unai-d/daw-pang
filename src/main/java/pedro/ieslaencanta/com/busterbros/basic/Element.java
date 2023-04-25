@@ -12,29 +12,35 @@ import pedro.ieslaencanta.com.busterbros.basic.interfaces.IDrawable;
 public class Element implements IDebuggable, IDrawable
 {
     private boolean debug;
-    protected Rectangle2D rectangle;
-    private Color color;
+    //protected Rectangle2D rectangle;
+	protected double x = 0, y = 0, width = 0, height = 0;
+    protected Color color;
 	protected Rectangle2D imageUv;
 	protected Image image;
 
     public Element()
 	{
-        this.rectangle = Rectangle2D.EMPTY;
+        //this.rectangle = Rectangle2D.EMPTY;
     }
 
     public Element(double x, double y, double width, double height)
 	{
-        this.rectangle = new Rectangle2D(x, y, width, height);
+        this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
     }
 
     public void setPosition(double x, double y)
 	{
-        rectangle = new Rectangle2D(x, y, rectangle.getWidth(), rectangle.getHeight());
+        this.x = x;
+		this.y = y;
     }
 
 	public void setSize(double w, double h)
 	{
-		rectangle = new Rectangle2D(rectangle.getMinX(), rectangle.getMinY(), w, h);
+		this.width = w;
+		this.height = h;
 	}
 
     @Override
@@ -51,12 +57,12 @@ public class Element implements IDebuggable, IDrawable
 
     public double getWidth()
 	{
-        return this.getRectangle().getWidth();
+        return width;
     }
 
     public double getHeight()
 	{
-        return this.getRectangle().getHeight();
+        return height;
     }
 
     public Point2D getCenter()
@@ -91,12 +97,15 @@ public class Element implements IDebuggable, IDrawable
 
     public Rectangle2D getRectangle()
 	{
-        return rectangle;
+        return new Rectangle2D(x, y, width, height);
     }
 
     public void setRectangle(Rectangle2D rectangle)
 	{
-        this.rectangle = rectangle;
+        this.x = rectangle.getMinX();
+		this.y = rectangle.getMinY();
+		this.width = rectangle.getWidth();
+		this.height = rectangle.getHeight();
     }
 
 	public Image getImage()
@@ -122,54 +131,9 @@ public class Element implements IDebuggable, IDrawable
     @Override
     public void debug(GraphicsContext gc)
 	{
-        gc.setFill(Color.WHITE);
+		// Center point.
 
-        gc.fillOval(this.getRectangle().getMinX() * Game.SCALE - 5,
-			this.getRectangle().getMinY() * Game.SCALE - 5,
-			10, 10);
-
-        gc.fillOval(this.getRectangle().getMaxX() * Game.SCALE - 5,
-			this.getRectangle().getMinY() * Game.SCALE - 5,
-			10, 10);
-
-        // gc.strokeText(" X:" + (int) (this.getRectangle().getMaxX())
-        //         + " Y:" + (int) (this.getRectangle().getMinY()),
-        //         (this.getRectangle().getMaxX()) * Game.SCALE + 12,
-        //         (this.getRectangle().getMinY()) * Game.SCALE);
-
-        gc.fillOval(this.getRectangle().getMinX() * Game.SCALE - 5,
-			this.getRectangle().getMaxY() * Game.SCALE - 5,
-			10, 10);
-
-        // gc.strokeText(" X:" + (int) (this.getRectangle().getMinX())
-        //         + " Y:" + (int) (this.getRectangle().getMaxY()),
-        //         (this.getRectangle().getMinX()) * Game.SCALE,
-        //         (this.getRectangle().getMaxY()) * Game.SCALE);
-
-        gc.fillOval(this.getRectangle().getMaxX() * Game.SCALE - 5,
-			this.getRectangle().getMaxY() * Game.SCALE - 5,
-			10, 10);
-
-        // gc.strokeText(" X:" + (int) (this.getRectangle().getMaxX())
-        //         + " Y:" + (int) (this.getRectangle().getMaxY()),
-        //         (this.getRectangle().getMaxX()) * Game.SCALE,
-        //         (this.getRectangle().getMaxY()) * Game.SCALE);
-
-        // gc.strokeText(" X:" + (int) (this.getCenterX())
-        //         + " Y:" + (int) (this.getCenterY()),
-        //         (this.getCenterX()) * Game.SCALE,
-        //         (this.getCenterY()) * Game.SCALE);
-
-        gc.setFill(this.color);
-
-        gc.fillRect(
-			this.getRectangle().getMinX() * Game.SCALE,
-			this.getRectangle().getMinY() * Game.SCALE,
-			this.getRectangle().getWidth() * Game.SCALE,
-			this.getRectangle().getHeight() * Game.SCALE
-		);
-
-		gc.setFill(Color.YELLOW);
+		gc.setFill(Color.WHITE);
 
         gc.fillOval(
 			this.getCenterX() * Game.SCALE - 5,
@@ -178,7 +142,17 @@ public class Element implements IDebuggable, IDrawable
 			10
 		);
 
+		// Bounding box.
+
 		gc.setStroke(Color.WHITE);
+		gc.setFill(Color.TRANSPARENT);
+		gc.beginPath();
+		gc.moveTo(x * Game.SCALE, y * Game.SCALE);
+		gc.lineTo((x + width) * Game.SCALE, y * Game.SCALE);
+		gc.lineTo((x + width) * Game.SCALE, (y + height) * Game.SCALE);
+		gc.lineTo(x * Game.SCALE, (y + height) * Game.SCALE);
+		gc.closePath();
+		gc.stroke();
 		
 		gc.strokeText(
 			" X:" + (int)(this.getRectangle().getMinX()) + " Y:" + (int)(this.getRectangle().getMinY()),

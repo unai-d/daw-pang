@@ -2,8 +2,9 @@ package pedro.ieslaencanta.com.busterbros.basic.interfaces;
 
 public interface IMovable
 {
+	public void setSpeed(double x, double y);
+	public void setSpeed(double x, double y, double lerp);
 	public void move(double x, double y);
-	public void move(double x, double y, double lerp);
 	public void moveLeft();
 	public void moveLeft(double inc);
 	public void moveRight();

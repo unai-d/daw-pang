@@ -8,5 +8,35 @@ public abstract class ElementDynamic extends Element implements ICollidable, ISt
 {
 	protected State state = State.STOPPED;
 
+	@Override
+	public void start()
+	{
+		state = State.STARTED;
+	}
+
+	@Override
+	public void stop()
+	{
+		state = State.STOPPED;
+	}
+
+	@Override
+	public void pause()
+	{
+		state = State.PAUSED;
+	}
+
+	@Override
+	public State getState()
+	{
+		return state;
+	}
+
+	@Override
+	public void setState(State s)
+	{
+		state = s;
+	}
+
 	public abstract void update();
 }
