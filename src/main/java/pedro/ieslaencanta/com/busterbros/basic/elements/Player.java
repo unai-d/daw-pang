@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
-import pedro.ieslaencanta.com.busterbros.App;
 import pedro.ieslaencanta.com.busterbros.Clock;
 import pedro.ieslaencanta.com.busterbros.Game;
 import pedro.ieslaencanta.com.busterbros.Resources;
@@ -32,22 +31,8 @@ public class Player extends ElementWithGravity
 	}
 
 	@Override
-	public void setSpeed(double x, double y)
-	{
-		setSpeed(x, y, 1.0);
-	}
-
-	@Override
-	public void setSpeed(double x, double y, double lerp)
-	{
-		lerp *= 0.1;
-		super.setSpeed(x, y, lerp);
-	}
-
-	@Override
 	public Optional<Collision> collision(Element e)
 	{
-		//if (climbingLadder && (e instanceof Brick || e instanceof BreakableBrick || e instanceof Ladder)) return Optional.empty();
 		return Collision.getGenericCollision(this, e);
 	}
 
@@ -78,32 +63,35 @@ public class Player extends ElementWithGravity
 	@Override
 	public void update()
 	{
-		// Update gravity.
-		if (state == State.STARTED)
-		{
-			if (activeVerticalGravity) vy += gy;
-			if (activeHorizontalGravity) vx += gx;
-		}
-
-		if ((y + height) > App.HEIGHT - 8)
+		// TODO
+		if ((y + height) > 204)
 		{
 			vy *= -gy;
 			vx *= 0.1;
 		}
+
 		if (climbingLadder)
 		{
 			vy *= 0.5;
 			vx *= 0.5;
 		}
 
+		// Set new position.
 		double newX = getRectangle().getMinX() + vx;
 		double newY = getRectangle().getMinY() + vy;
-		newX = Math.min(App.WIDTH - width - 8, Math.max(8, newX));
 
 		setPosition(newX, newY);
 		setImageCoordinates(getPlayerImageCoordinates());
 
+		// Prepare values for next tick (including gravity).
 		px = 0; py = 0;
+
+		// Update gravity.
+		if (state == State.STARTED)
+		{
+			if (activeVerticalGravity) vy += gy;
+			if (activeHorizontalGravity) vx += gx;
+		}
 	}
 
 	@Override
@@ -121,7 +109,7 @@ public class Player extends ElementWithGravity
 			imageUv.getMinY(),
 			imageUv.getWidth() * (lookingAtLeft ? -1 : 1),
 			imageUv.getHeight(),
-			(getRectangle().getMinX() + (WIDTH / 4)) * Game.SCALE,
+			(getRectangle().getMinX() - (WIDTH / 4)) * Game.SCALE,
 			getRectangle().getMinY() * Game.SCALE,
 			WIDTH * Game.SCALE,
 			HEIGHT * Game.SCALE
@@ -148,6 +136,7 @@ public class Player extends ElementWithGravity
 
 		px = x;
 		py = y;
+
 		move(x, y);
 	}
 

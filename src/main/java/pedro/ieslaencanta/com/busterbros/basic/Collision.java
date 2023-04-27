@@ -6,6 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import pedro.ieslaencanta.com.busterbros.Game;
+import pedro.ieslaencanta.com.busterbros.Utils;
 
 public class Collision
 {
@@ -14,6 +15,8 @@ public class Collision
 	private double distance = 0.0;
 	private Optional<Point2D> aSurface = Optional.empty();
 	private Optional<Point2D> bSurface = Optional.empty();
+	private Optional<Point2D> aPushVector = Optional.empty();
+	private Optional<Point2D> bPushVector = Optional.empty();
 
 	public Collision()
 	{
@@ -70,6 +73,12 @@ public class Collision
 		aSurface = Optional.of(a);
 		bSurface = Optional.of(b);
 	}
+
+	public void setPushVectors(Point2D a, Point2D b)
+	{
+		if (a != null) aPushVector = Optional.of(a);
+		if (b != null) bPushVector = Optional.of(b);
+	}
 	
 	public void debug(GraphicsContext gc)
 	{
@@ -81,26 +90,6 @@ public class Collision
 			b.getCenterX() * Game.SCALE,
 			b.getCenterY() * Game.SCALE
 		);
-
-		//var c1 = a.getCenter();
-		//var c2 = b.getCenter();
-		//var directionVector = c1.subtract(c2).normalize().multiply(16);
-
-		//gc.setStroke(Color.GREEN);
-
-		// gc.strokeLine(
-		// 	a.getCenterX() * Game.SCALE,
-		// 	a.getCenterY() * Game.SCALE,
-		// 	(a.getCenterX() + directionVector.getX()) * Game.SCALE,
-		// 	(a.getCenterY() + directionVector.getY()) * Game.SCALE
-		// );
-
-		// gc.strokeLine(
-		// 	b.getCenterX() * Game.SCALE,
-		// 	b.getCenterY() * Game.SCALE,
-		// 	(b.getCenterX() - directionVector.getX()) * Game.SCALE,
-		// 	(b.getCenterY() - directionVector.getY()) * Game.SCALE
-		// );
 
 		if (aSurface.isPresent() && bSurface.isPresent())
 		{
@@ -120,6 +109,23 @@ public class Collision
 				8
 			);
 		}
+
+		if (aPushVector.isPresent())
+		{
+			Point2D aPushVectorNorm = aPushVector.get().normalize().multiply(16.0);
+
+			gc.setLineWidth(2.0);
+			gc.setStroke(Color.rgb(255, 0, 255));
+
+			gc.strokeLine(
+				a.getCenterX() * Game.SCALE,
+				a.getCenterY() * Game.SCALE,
+				(a.getCenterX() + aPushVectorNorm.getX()) * Game.SCALE,
+				(a.getCenterY() + aPushVectorNorm.getY()) * Game.SCALE
+			);
+		}
+
+		Utils.renderRectangleBorder(gc, Color.RED, Utils.intersection(a.getRectangle(), b.getRectangle()));
 	}
 
 	public static Optional<Collision> getGenericCollision(Element e1, Element e2)

@@ -7,6 +7,7 @@ package pedro.ieslaencanta.com.busterbros;
 import java.util.ArrayList;
 
 import javafx.geometry.Dimension2D;
+import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
@@ -23,6 +24,7 @@ import pedro.ieslaencanta.com.busterbros.basic.elements.BreakableBrick;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Brick;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Ladder;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Player;
+import pedro.ieslaencanta.com.busterbros.basic.elements.ViewportLimits;
 
 /**
  * Tablero del juego, posee un fondo (imagen estática, solo se cambia cuando se
@@ -101,7 +103,7 @@ public class Board implements IKeyListener
 
         Pair<Level.ElementType, Rectangle2D>[] fi = this.levels[this.actual_level].getFigures();
 
-        this.elements = new Element[fi.length + ballCount + 1];
+        this.elements = new Element[fi.length + ballCount + 2];
 
 		int i;
         for (i = 0; i < fi.length; i++)
@@ -160,6 +162,9 @@ public class Board implements IKeyListener
 		this.player.activeGravity();
 		this.player.setVerticalGravity(0.25);
 		this.player.start();
+
+		i++;
+		this.elements[i] = new ViewportLimits(8, 8, App.WIDTH - 16, App.HEIGHT - 16);
     }
 
     public void setGraphicsContext(GraphicsContext gc)
@@ -193,7 +198,7 @@ public class Board implements IKeyListener
 
 		for (var e : elements)
 		{
-			if (e == null) break;
+			if (e == null) continue;
 			if (e instanceof ElementDynamic)
 			{
 				var edyn = (ElementDynamic)e;
@@ -202,34 +207,80 @@ public class Board implements IKeyListener
 				for (var e2 : elements)
 				{
 					if (e == e2) continue;
+					if (e2 == null) continue;
 
 					var collisionData = edyn.collision(e2);
 					if (collisionData.isPresent())
 					{
 						Collision col = collisionData.get();
-						var a = col.getA();
-						var b = col.getB();
+						collisionDataList.add(col);
 
 						// Update objects status based on collision data.
 						if (physicsEnabled)
 						{
+							var a = col.getA();
+							var b = col.getB();
 							var c1 = a.getCenter();
 							var c2 = b.getCenter();
-							var directionVector = c1.subtract(c2);
+							var directionVector = c2.subtract(c1);
 
-							if (a instanceof ElementMovable && b instanceof ElementMovable)
+							if (a instanceof ElementMovable)
 							{
 								var amov = (ElementMovable)a;
-								var bmov = (ElementMovable)b;
-								amov.setSpeed(directionVector.getX(), directionVector.getY(), 0.1);
-								bmov.setSpeed(-directionVector.getX(), -directionVector.getY(), 0.1);
-							}
-							else if (b instanceof Brick || b instanceof BreakableBrick)
-							{
-								double lerp = (1.0 / directionVector.magnitude()) * 2.0;
-								var amov = (ElementMovable)a;
-								amov.setSpeed(directionVector.getX(), directionVector.getY(), lerp);
-								//System.out.println(lerp);
+
+								if (b instanceof ViewportLimits)
+								{
+									amov.setSpeed(0, 0);
+									var x = amov.getX();
+									var y = Utils.clamp(amov.getY(), 8, App.HEIGHT - 8 - amov.getHeight());
+									amov.setPosition(x, y);
+								}
+								else if (a instanceof Ball && b instanceof Ball)
+								{
+									var bmov = (Ball)b;
+									amov.setSpeed(-directionVector.getX(), -directionVector.getY(), 0.1);
+									bmov.setSpeed(directionVector.getX(), directionVector.getY(), 0.1);
+								}
+								else if (!(a instanceof Player && ((Player)a).getClimbingLadderMode()) && (b instanceof Brick || b instanceof BreakableBrick))
+								{
+									var ax1 = amov.getX();
+									var ax2 = ax1 + amov.getWidth();
+									var bx1 = b.getX();
+									var bx2 = bx1 + b.getWidth();
+
+									var ay1 = amov.getY();
+									var ay2 = ay1 + amov.getHeight();
+									var by1 = b.getY();
+									var by2 = by1 + b.getHeight();
+
+									var ac = amov.getCenter();
+									var bc = b.getCenter();
+
+									// Move the A-object center closer to the B-object center.
+									var newXCenter = Utils.clamp(ac.getX(), bx1, bx2);
+									var newYCenter = Utils.clamp(ac.getY(), by1, by2);
+									directionVector = new Point2D(newXCenter, newYCenter).subtract(ac);
+									if (directionVector.magnitude() > 0.01)
+									{
+										var intersection = Utils.intersection(a.getRectangle(), b.getRectangle());
+										var smallerWidth = Math.min(a.getWidth(), b.getWidth());
+										var smallerHeight = Math.min(a.getHeight(), b.getHeight());
+										var pushAngle = directionVector.angle(new Point2D(1.0, 0.0)) / 180.0 * Math.PI;
+										pushAngle = Utils.squarifyAngle(pushAngle, 4.0);
+										Point2D pushVec = new Point2D(-Math.cos(pushAngle), -Math.sin(pushAngle));
+										col.setPushVectors(pushVec, null);
+
+										double xlerp = 4.0 * pushVec.getX() * (intersection.getWidth() / smallerWidth);
+										double ylerp = 4.0 * pushVec.getY() * (intersection.getHeight() / smallerHeight);
+
+										amov.setSpeed(xlerp, ylerp, 0.5);
+										//System.out.println(bc.getY() + " -> " + ac.getY() + " = " + ylerp);
+									}
+									else
+									{
+										//System.out.println("Error: direction vector too short: " + directionVector);
+									}
+								}
 							}
 						}
 
@@ -245,8 +296,6 @@ public class Board implements IKeyListener
 								}
 							}
 						}
-
-						collisionDataList.add(col);
 					}
 				}
 			}

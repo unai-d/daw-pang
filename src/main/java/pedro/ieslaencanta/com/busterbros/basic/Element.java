@@ -6,6 +6,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import pedro.ieslaencanta.com.busterbros.Game;
+import pedro.ieslaencanta.com.busterbros.Utils;
 import pedro.ieslaencanta.com.busterbros.basic.interfaces.IDebuggable;
 import pedro.ieslaencanta.com.busterbros.basic.interfaces.IDrawable;
 
@@ -54,6 +55,16 @@ public class Element implements IDebuggable, IDrawable
 	{
         return this.debug;
     }
+
+	public double getX()
+	{
+		return x;
+	}
+
+	public double getY()
+	{
+		return y;
+	}
 
     public double getWidth()
 	{
@@ -144,15 +155,7 @@ public class Element implements IDebuggable, IDrawable
 
 		// Bounding box.
 
-		gc.setStroke(Color.WHITE);
-		gc.setFill(Color.TRANSPARENT);
-		gc.beginPath();
-		gc.moveTo(x * Game.SCALE, y * Game.SCALE);
-		gc.lineTo((x + width) * Game.SCALE, y * Game.SCALE);
-		gc.lineTo((x + width) * Game.SCALE, (y + height) * Game.SCALE);
-		gc.lineTo(x * Game.SCALE, (y + height) * Game.SCALE);
-		gc.closePath();
-		gc.stroke();
+		Utils.renderRectangleBorder(gc, Color.WHITE, x, y, width, height);
 		
 		gc.strokeText(
 			" X:" + (int)(this.getRectangle().getMinX()) + " Y:" + (int)(this.getRectangle().getMinY()),
