@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
-import pedro.ieslaencanta.com.busterbros.App;
 import pedro.ieslaencanta.com.busterbros.Resources;
 import pedro.ieslaencanta.com.busterbros.State;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
@@ -88,27 +87,17 @@ public class Ball extends ElementWithGravity
 			if (activeVerticalGravity) vy += gy;
 			if (activeHorizontalGravity) vx += gx;
 		}
-		if ((y + height) > App.HEIGHT - 8)
-		{
-			//System.out.println(vy + " -> " + (vy * -0.5));
-			vy *= -0.5;
-			if (Math.abs(vy) <= 0.1) vy = 0;
-		}
-		if (x < 8 || (x + width) > App.WIDTH - 8)
-		{
-			vx *= -0.75;
-		}
 		setPosition(getRectangle().getMinX() + vx, getRectangle().getMinY() + vy);
 	}
 
 	public double getRadiusAtAngle(double angle)
 	{
-		return Math.abs(Math.sin(angle) * ballSize.h + Math.cos(angle) * ballSize.w) / 2;
+		return Math.abs(Math.cos(angle) * ballSize.w + Math.sin(angle) * ballSize.h) / 2;
 	}
 
 	public Point2D getSurfacePositionAtAngle(double angle)
 	{
-		return new Point2D(Math.cos(angle) * ballSize.w / -2, Math.sin(angle) * ballSize.h / -2);
+		return new Point2D(Math.cos(angle) * ballSize.w / 2, Math.sin(angle) * ballSize.h / 2);
 	}
 
 	@Override
@@ -120,7 +109,7 @@ public class Ball extends ElementWithGravity
 		var c2 = e.getCenter();
 		var distanceVector = c1.subtract(c2);
 		double angle = distanceVector.angle(new Point2D(1, 0));
-		angle = angle / 180 * Math.PI;
+		angle = angle / 180 * Math.PI; // DEG to RAD.
 
 		// Ball -> Ball
 		if (e instanceof Ball)
@@ -135,6 +124,10 @@ public class Ball extends ElementWithGravity
 				Point2D bSurface = distanceVector.normalize().multiply(r2);
 				ret.setSurfacePoints(aSurface, bSurface);
 			}
+		}
+		else if (e instanceof ViewportLimits)
+		{
+			return ((ViewportLimits)e).collision(this);
 		}
 		// Ball -> Generic element.
 		else if (getRectangle().intersects(e.getRectangle()))

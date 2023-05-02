@@ -155,12 +155,16 @@ public class Element implements IDebuggable, IDrawable
 
 		// Bounding box.
 
+		gc.setLineWidth(2.0);
+
 		Utils.renderRectangleBorder(gc, Color.WHITE, x, y, width, height);
 		
+		gc.setLineWidth(1.0);
+
 		gc.strokeText(
 			" X:" + (int)(this.getRectangle().getMinX()) + " Y:" + (int)(this.getRectangle().getMinY()),
-			(this.getRectangle().getMinX()) * Game.SCALE,
-			(this.getRectangle().getMinY()) * Game.SCALE
+			(this.getRectangle().getMinX() - 2) * Game.SCALE,
+			(this.getRectangle().getMinY() - 2) * Game.SCALE
 		);
     }
 

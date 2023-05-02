@@ -17,6 +17,7 @@ public class Collision
 	private Optional<Point2D> bSurface = Optional.empty();
 	private Optional<Point2D> aPushVector = Optional.empty();
 	private Optional<Point2D> bPushVector = Optional.empty();
+	private int userData = 0;
 
 	public Collision()
 	{
@@ -25,9 +26,15 @@ public class Collision
 
 	public Collision(Element a, Element b)
 	{
+		this(a, b, 0);
+	}
+
+	public Collision(Element a, Element b, int userData)
+	{
 		setA(a);
 		setB(b);
 		updateDistance();
+		this.userData = userData;
 	}
 
 	public Element getA()
@@ -50,6 +57,16 @@ public class Collision
 		b = e;
 	}
 
+	public void setUserData(int userData)
+	{
+		this.userData = userData;
+	}
+
+	public int getUserData()
+	{
+		return userData;
+	}
+
 	public double getDistance()
 	{
 		return distance;
@@ -65,7 +82,17 @@ public class Collision
 		if (a == null || b == null) return;
 		var c1 = a.getCenter();
 		var c2 = b.getCenter();
-		distance = Math.sqrt(c1.distance(c2));
+		distance = c1.distance(c2);
+	}
+
+	public Optional<Point2D> getASurfacePoint()
+	{
+		return aSurface;
+	}
+
+	public Optional<Point2D> getBSurfacePoint()
+	{
+		return bSurface;
 	}
 
 	public void setSurfacePoints(Point2D a, Point2D b)
@@ -82,6 +109,7 @@ public class Collision
 	
 	public void debug(GraphicsContext gc)
 	{
+		gc.setLineWidth(2.0);
 		gc.setStroke(Color.RED);
 
 		gc.strokeLine(
@@ -114,7 +142,6 @@ public class Collision
 		{
 			Point2D aPushVectorNorm = aPushVector.get().normalize().multiply(16.0);
 
-			gc.setLineWidth(2.0);
 			gc.setStroke(Color.rgb(255, 0, 255));
 
 			gc.strokeLine(
@@ -131,5 +158,11 @@ public class Collision
 	public static Optional<Collision> getGenericCollision(Element e1, Element e2)
 	{
 		return e1.getRectangle().intersects(e2.getRectangle()) ? Optional.of(new Collision(e1, e2)) : Optional.empty();
+	}
+
+	@Override
+	public String toString()
+	{
+		return "[A=" + a.getClass().getSimpleName() + ", B=" + b.getClass().getSimpleName() + "]";
 	}
 }

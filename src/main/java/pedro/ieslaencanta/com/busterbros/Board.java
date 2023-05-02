@@ -196,20 +196,24 @@ public class Board implements IKeyListener
 
 		boolean playerIsInsideLadder = false;
 
-		for (var e : elements)
+		for (var lhe : elements)
 		{
-			if (e == null) continue;
-			if (e instanceof ElementDynamic)
+			if (lhe == null) continue;
+			if (lhe instanceof ElementDynamic)
 			{
-				var edyn = (ElementDynamic)e;
-				edyn.update();
+				var lheDynamic = (ElementDynamic)lhe;
+				lheDynamic.update();
 
-				for (var e2 : elements)
+				for (var rhe : elements)
 				{
-					if (e == e2) continue;
-					if (e2 == null) continue;
+					if (lhe == rhe) continue;
+					if (rhe == null) continue;
+					if (Utils.elementsExistInCollisionList(collisionDataList, rhe, lhe))
+					{
+						continue;
+					}
 
-					var collisionData = edyn.collision(e2);
+					var collisionData = lheDynamic.collision(rhe);
 					if (collisionData.isPresent())
 					{
 						Collision col = collisionData.get();
@@ -218,82 +222,19 @@ public class Board implements IKeyListener
 						// Update objects status based on collision data.
 						if (physicsEnabled)
 						{
-							var a = col.getA();
-							var b = col.getB();
-							var c1 = a.getCenter();
-							var c2 = b.getCenter();
-							var directionVector = c2.subtract(c1);
-
-							if (a instanceof ElementMovable)
-							{
-								var amov = (ElementMovable)a;
-
-								if (b instanceof ViewportLimits)
-								{
-									amov.setSpeed(0, 0);
-									var x = amov.getX();
-									var y = Utils.clamp(amov.getY(), 8, App.HEIGHT - 8 - amov.getHeight());
-									amov.setPosition(x, y);
-								}
-								else if (a instanceof Ball && b instanceof Ball)
-								{
-									var bmov = (Ball)b;
-									amov.setSpeed(-directionVector.getX(), -directionVector.getY(), 0.1);
-									bmov.setSpeed(directionVector.getX(), directionVector.getY(), 0.1);
-								}
-								else if (!(a instanceof Player && ((Player)a).getClimbingLadderMode()) && (b instanceof Brick || b instanceof BreakableBrick))
-								{
-									var ax1 = amov.getX();
-									var ax2 = ax1 + amov.getWidth();
-									var bx1 = b.getX();
-									var bx2 = bx1 + b.getWidth();
-
-									var ay1 = amov.getY();
-									var ay2 = ay1 + amov.getHeight();
-									var by1 = b.getY();
-									var by2 = by1 + b.getHeight();
-
-									var ac = amov.getCenter();
-									var bc = b.getCenter();
-
-									// Move the A-object center closer to the B-object center.
-									var newXCenter = Utils.clamp(ac.getX(), bx1, bx2);
-									var newYCenter = Utils.clamp(ac.getY(), by1, by2);
-									directionVector = new Point2D(newXCenter, newYCenter).subtract(ac);
-									if (directionVector.magnitude() > 0.01)
-									{
-										var intersection = Utils.intersection(a.getRectangle(), b.getRectangle());
-										var smallerWidth = Math.min(a.getWidth(), b.getWidth());
-										var smallerHeight = Math.min(a.getHeight(), b.getHeight());
-										var pushAngle = directionVector.angle(new Point2D(1.0, 0.0)) / 180.0 * Math.PI;
-										pushAngle = Utils.squarifyAngle(pushAngle, 4.0);
-										Point2D pushVec = new Point2D(-Math.cos(pushAngle), -Math.sin(pushAngle));
-										col.setPushVectors(pushVec, null);
-
-										double xlerp = 4.0 * pushVec.getX() * (intersection.getWidth() / smallerWidth);
-										double ylerp = 4.0 * pushVec.getY() * (intersection.getHeight() / smallerHeight);
-
-										amov.setSpeed(xlerp, ylerp, 0.5);
-										//System.out.println(bc.getY() + " -> " + ac.getY() + " = " + ylerp);
-									}
-									else
-									{
-										//System.out.println("Error: direction vector too short: " + directionVector);
-									}
-								}
-							}
+							Physics.updatePhysics(col);
 						}
 
 						// Player-specific events (e. g.: ladder climbing).
-						if (e == player)
+						if (lhe == player)
 						{
-							if (e2 instanceof Ladder) // Player is on ladder.
+							if (rhe instanceof Ladder) // Player is on ladder.
 							{
 								playerIsInsideLadder = true;
-								if (!player.getClimbingLadderMode())
-								{
+								//if (!player.getClimbingLadderMode())
+								//{
 									if (up_press || down_press) player.setClimbingLadderMode(true);
-								}
+								//}
 							}
 						}
 					}
@@ -314,7 +255,10 @@ public class Board implements IKeyListener
 		{
             for (int i = 0; i < this.elements.length; i++)
 			{
+				if (this.elements[i] == null) continue;
+
                 this.elements[i].paint(gc);
+				
 				if (this.elements[i].isDebug() || debug)
 				{
 					this.elements[i].debug(gc);
@@ -322,9 +266,13 @@ public class Board implements IKeyListener
             }
         }
 
+		int i = 0;
 		for (var col : collisionDataList)
 		{
 			col.debug(gc);
+			gc.setLineWidth(1.0);
+			gc.setStroke(Color.WHITE);
+			gc.strokeText(col.toString(), 8, ++i * 12);
 		}
     }
 
@@ -406,6 +354,10 @@ public class Board implements IKeyListener
             case DOWN:
                 this.down_press = true;
                 break;
+
+			case SPACE:
+				this.player.shoot();
+				break;
 
 			case N:
 				this.nextLevel();

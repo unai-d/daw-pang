@@ -3,15 +3,11 @@ package pedro.ieslaencanta.com.busterbros.basic.elements;
 import java.util.Optional;
 
 import javafx.geometry.Rectangle2D;
-import javafx.scene.shape.Path;
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
-import pedro.ieslaencanta.com.busterbros.Utils;
+import pedro.ieslaencanta.com.busterbros.App;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
-import pedro.ieslaencanta.com.busterbros.basic.ElementDynamic;
 
-public class ViewportLimits extends ElementDynamic
+public class ViewportLimits extends Element
 {
 	public ViewportLimits(double x, double y, double width, double height)
 	{
@@ -21,31 +17,29 @@ public class ViewportLimits extends ElementDynamic
 		this.height = height;
 	}
 
-	@Override
 	public Optional<Collision> collision(Element e)
 	{
-		// double ex1 = e.getX();
-		// double ex2 = ex1 + e.getWidth();
-		// double ey1 = e.getY();
-		// double ey2 = ey1 + e.getHeight();
+		int exteriorCollisions = 0;
 
-		Rectangle r1 = new Rectangle(x, y, width, height - 8);
-		Rectangle r2 = new Rectangle(e.getX(), e.getY(), e.getWidth(), e.getHeight());
-		//int r1s = ((Path)(Shape)r1).getElements().size();
+		final double MAX_LENGTH = 1048576;
+		Rectangle2D[] boundaries =
+		{
+			new Rectangle2D(-MAX_LENGTH, height, width + MAX_LENGTH * 2, MAX_LENGTH), // 1 - bottom
+			new Rectangle2D(-MAX_LENGTH, -MAX_LENGTH, MAX_LENGTH + x, height + MAX_LENGTH * 2), // 2 - left
+			new Rectangle2D(width, -MAX_LENGTH, MAX_LENGTH, height + MAX_LENGTH * 2) // 3 - right
+		};
 
-		var interRet = Shape.intersect(r1, r2);
-		var interPath = (Path)interRet;
-		var interPathElemSize = interPath.getElements().size();
-		boolean isOutside = interPathElemSize < 5;
+		int i = 1;
+		for (Rectangle2D boundary : boundaries)
+		{
+			if (boundary.intersects(e.getRectangle()))
+			{
+				exteriorCollisions |= i;
+				break;
+			}
+			i *= 2;
+		}
 
-		// if (e instanceof Player) System.out.println("Player inter. elem. count is " + interPathElemSize + ", OOB is " + isOutside);
-
-		return isOutside ? Optional.of(new Collision(this, e)) : Optional.empty();
-	}
-
-	@Override
-	public void update()
-	{
-		
+		return (exteriorCollisions > 0) ? Optional.of(new Collision(this, e, i)) : Optional.empty();
 	}
 }

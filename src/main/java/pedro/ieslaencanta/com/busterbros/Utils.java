@@ -1,8 +1,12 @@
 package pedro.ieslaencanta.com.busterbros;
 
+import java.util.ArrayList;
+
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import pedro.ieslaencanta.com.busterbros.basic.Collision;
+import pedro.ieslaencanta.com.busterbros.basic.Element;
 
 public class Utils
 {
@@ -45,6 +49,16 @@ public class Utils
 		if (h < 0) { y += h; h *= -1; }
 
 		return new Rectangle2D(x, y, w, h);
+	}
+
+	public static boolean elementsExistInCollisionList(ArrayList<Collision> colList, Element a, Element b)
+	{
+		for (Collision col : colList)
+		{
+			if (col.getA() == a && col.getB() == b) return true;
+		}
+
+		return false;
 	}
 
 	public static void renderRectangleBorder(GraphicsContext gc, Color color, Rectangle2D r)

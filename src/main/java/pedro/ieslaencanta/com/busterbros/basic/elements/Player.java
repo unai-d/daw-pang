@@ -10,6 +10,7 @@ import pedro.ieslaencanta.com.busterbros.Resources;
 import pedro.ieslaencanta.com.busterbros.State;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
+import pedro.ieslaencanta.com.busterbros.basic.ElementDynamic;
 import pedro.ieslaencanta.com.busterbros.basic.ElementWithGravity;
 
 public class Player extends ElementWithGravity
@@ -33,7 +34,15 @@ public class Player extends ElementWithGravity
 	@Override
 	public Optional<Collision> collision(Element e)
 	{
-		return Collision.getGenericCollision(this, e);
+		if (e instanceof ElementDynamic)
+		{
+			return ((ElementDynamic)e).collision(this);
+		}
+		else if (e instanceof ViewportLimits)
+		{
+			return ((ViewportLimits)e).collision(this);
+		}
+		return Collision.getGenericCollision(this, e); // TODO
 	}
 
 	@Override
@@ -60,16 +69,14 @@ public class Player extends ElementWithGravity
 		vy = y;
 	}
 
+	public void shoot()
+	{
+		
+	}
+
 	@Override
 	public void update()
 	{
-		// TODO
-		if ((y + height) > 204)
-		{
-			vy *= -gy;
-			vx *= 0.1;
-		}
-
 		if (climbingLadder)
 		{
 			vy *= 0.5;
