@@ -2,6 +2,7 @@ package pedro.ieslaencanta.com.busterbros;
 
 import java.util.ArrayList;
 
+import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -15,6 +16,11 @@ public class Utils
 		return Math.max(min, Math.min(max, v));
 	}
 
+	public static int clamp(int v, int min, int max)
+	{
+		return Math.max(min, Math.min(max, v));
+	}
+
 	public static double area(Rectangle2D r)
 	{
 		return r.getWidth() * r.getHeight();
@@ -22,8 +28,8 @@ public class Utils
 
 	public static double squarifyAngle(double a, double scalar)
 	{
-		double quarterAngle = Math.PI / 2.0; // 45º
-		double halfQuarterAngle = quarterAngle / 2.0; // 22.5º
+		double quarterAngle = Math.PI / 2.0; // 90º
+		double halfQuarterAngle = quarterAngle / 2.0; // 45º
 
 		int quarters = (int)(a / (Math.PI / 2));
 
@@ -34,6 +40,37 @@ public class Utils
 		ret += (quarters * quarterAngle) + halfQuarterAngle;
 
 		return ret;
+	}
+
+	public static Point2D squarifyAngle(Point2D p, double scalar)
+	{
+		double angle = p.angle(new Point2D(1.0, 0.0)) / 180.0 * Math.PI;
+		angle = Utils.squarifyAngle(angle, scalar);
+
+		Point2D ret = new Point2D(Math.copySign(Math.cos(angle), p.getX()), Math.copySign(Math.sin(angle), p.getY()));
+		ret = ret.multiply(p.magnitude());
+
+		return ret;
+	}
+
+	public static String getGauge(double value, int size)
+	{
+		String ret = "[";
+
+		int threshold = (int)(value * (double)size);
+		for (int i = 0; i < size; i++)
+		{
+			ret += (i < threshold) ? "\u2588" : " ";
+		}
+
+		ret += "]";
+		return ret;
+	}
+
+	public static String getGauge(Point2D value, int size)
+	{
+		Point2D nv = value.normalize();
+		return getGauge(nv.getX() / 2 + 1, size) + " " + getGauge(nv.getY() / 2.0 + 1.0, size);
 	}
 
 	public static Rectangle2D intersection(Rectangle2D r1, Rectangle2D r2)

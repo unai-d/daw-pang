@@ -24,9 +24,9 @@ public class ViewportLimits extends Element
 		final double MAX_LENGTH = 1048576;
 		Rectangle2D[] boundaries =
 		{
-			new Rectangle2D(-MAX_LENGTH, height, width + MAX_LENGTH * 2, MAX_LENGTH), // 1 - bottom
+			new Rectangle2D(-MAX_LENGTH, y + height, width + MAX_LENGTH * 2, MAX_LENGTH), // 1 - bottom
 			new Rectangle2D(-MAX_LENGTH, -MAX_LENGTH, MAX_LENGTH + x, height + MAX_LENGTH * 2), // 2 - left
-			new Rectangle2D(width, -MAX_LENGTH, MAX_LENGTH, height + MAX_LENGTH * 2) // 3 - right
+			new Rectangle2D(x + width, -MAX_LENGTH, MAX_LENGTH, height + MAX_LENGTH * 2) // 3 - right
 		};
 
 		int i = 1;

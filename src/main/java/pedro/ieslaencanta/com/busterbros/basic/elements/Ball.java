@@ -92,7 +92,7 @@ public class Ball extends ElementWithGravity
 
 	public double getRadiusAtAngle(double angle)
 	{
-		return Math.abs(Math.cos(angle) * ballSize.w + Math.sin(angle) * ballSize.h) / 2;
+		return getSurfacePositionAtAngle(angle).magnitude();
 	}
 
 	public Point2D getSurfacePositionAtAngle(double angle)
@@ -120,8 +120,8 @@ public class Ball extends ElementWithGravity
 			if (r1 + r2 > distanceVector.magnitude())
 			{
 				ret = new Collision(this, e);
-				Point2D aSurface = distanceVector.normalize().multiply(-r1);
-				Point2D bSurface = distanceVector.normalize().multiply(r2);
+				Point2D aSurface = getSurfacePositionAtAngle(angle);
+				Point2D bSurface = eBall.getSurfacePositionAtAngle(angle);
 				ret.setSurfacePoints(aSurface, bSurface);
 			}
 		}

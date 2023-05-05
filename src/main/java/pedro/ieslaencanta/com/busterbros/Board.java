@@ -16,12 +16,15 @@ import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
+import pedro.ieslaencanta.com.busterbros.basic.ElementBullet;
 import pedro.ieslaencanta.com.busterbros.basic.ElementDynamic;
 import pedro.ieslaencanta.com.busterbros.basic.ElementMovable;
 import pedro.ieslaencanta.com.busterbros.basic.Level;
+import pedro.ieslaencanta.com.busterbros.basic.Weapon;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Ball;
 import pedro.ieslaencanta.com.busterbros.basic.elements.BreakableBrick;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Brick;
+import pedro.ieslaencanta.com.busterbros.basic.elements.FixedCrossbow;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Ladder;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Player;
 import pedro.ieslaencanta.com.busterbros.basic.elements.ViewportLimits;
@@ -99,11 +102,11 @@ public class Board implements IKeyListener
 
     private void createElementsLevel()
 	{
-		int ballCount = 1 + (int)(Math.random() * 10);
+		int ballCount = 1 + (int)(Math.random() * 5);
 
         Pair<Level.ElementType, Rectangle2D>[] fi = this.levels[this.actual_level].getFigures();
 
-        this.elements = new Element[fi.length + ballCount + 2];
+        this.elements = new Element[256];
 
 		int i;
         for (i = 0; i < fi.length; i++)
@@ -161,6 +164,7 @@ public class Board implements IKeyListener
 		this.player = (Player)elements[i];
 		this.player.activeGravity();
 		this.player.setVerticalGravity(0.25);
+		this.player.setWeapon(new FixedCrossbow());
 		this.player.start();
 
 		i++;
@@ -176,6 +180,7 @@ public class Board implements IKeyListener
     public void setBackGroundGraphicsContext(GraphicsContext gc)
 	{
         this.bggc = gc;
+		gc.setImageSmoothing(false);
         this.paintBackground();
     }
 
@@ -196,9 +201,20 @@ public class Board implements IKeyListener
 
 		boolean playerIsInsideLadder = false;
 
-		for (var lhe : elements)
+		for (int i = 0; i < elements.length; i++)
 		{
+			var lhe = elements[i];
+
 			if (lhe == null) continue;
+			if (lhe instanceof ElementBullet)
+			{
+				var lheBullet = (ElementBullet)lhe;
+				if (lheBullet.isMarkedForDeletion())
+				{
+					elements[i] = null;
+					continue;
+				}
+			}
 			if (lhe instanceof ElementDynamic)
 			{
 				var lheDynamic = (ElementDynamic)lhe;
@@ -231,10 +247,7 @@ public class Board implements IKeyListener
 							if (rhe instanceof Ladder) // Player is on ladder.
 							{
 								playerIsInsideLadder = true;
-								//if (!player.getClimbingLadderMode())
-								//{
-									if (up_press || down_press) player.setClimbingLadderMode(true);
-								//}
+								if (up_press || down_press) player.setClimbingLadderMode(true);
 							}
 						}
 					}
@@ -356,7 +369,14 @@ public class Board implements IKeyListener
                 break;
 
 			case SPACE:
-				this.player.shoot();
+				for (int i = 0; i < elements.length; i++)
+				{
+					if (elements[i] == null)
+					{
+						elements[i] = this.player.shoot();
+						break;
+					}
+				}
 				break;
 
 			case N:

@@ -1,7 +1,5 @@
 package pedro.ieslaencanta.com.busterbros.basic;
 
-import java.util.Optional;
-
 import pedro.ieslaencanta.com.busterbros.basic.interfaces.IResizable;
 
 public abstract class ElementResizable extends ElementDynamic implements IResizable

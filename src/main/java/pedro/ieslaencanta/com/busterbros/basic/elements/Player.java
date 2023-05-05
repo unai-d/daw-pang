@@ -11,18 +11,22 @@ import pedro.ieslaencanta.com.busterbros.State;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
 import pedro.ieslaencanta.com.busterbros.basic.ElementDynamic;
+import pedro.ieslaencanta.com.busterbros.basic.ElementResizable;
 import pedro.ieslaencanta.com.busterbros.basic.ElementWithGravity;
+import pedro.ieslaencanta.com.busterbros.basic.Weapon;
 
 public class Player extends ElementWithGravity
 {
 	public static final double WIDTH = 30;
 	public static final double HEIGHT = 32;
 
+	private Weapon weapon;
 	private double px = 0;
 	private double py = 0;
 
 	private boolean lookingAtLeft = false;
 	private boolean climbingLadder = false;
+	private boolean isShooting = false;
 
 	public Player(double x, double y)
 	{
@@ -42,7 +46,7 @@ public class Player extends ElementWithGravity
 		{
 			return ((ViewportLimits)e).collision(this);
 		}
-		return Collision.getGenericCollision(this, e); // TODO
+		return Collision.getGenericCollision(this, e);
 	}
 
 	@Override
@@ -69,9 +73,16 @@ public class Player extends ElementWithGravity
 		vy = y;
 	}
 
-	public void shoot()
+	public void setWeapon(Weapon w)
 	{
-		
+		weapon = w;
+		weapon.setPlayer(this);
+	}
+
+	public ElementResizable shoot()
+	{
+		isShooting = true;
+		return weapon.shoot();
 	}
 
 	@Override
@@ -145,6 +156,11 @@ public class Player extends ElementWithGravity
 		py = y;
 
 		move(x, y);
+
+		if ((Math.abs(px) + Math.abs(py)) > 0.1)
+		{
+			isShooting = false;
+		}
 	}
 
 	private Rectangle2D getPlayerImageCoordinates()
@@ -158,6 +174,11 @@ public class Player extends ElementWithGravity
 		{
 			if (Math.abs(px + py) > 0.1) frame = (int)(tickCount / 4) % 4;
 			return new Rectangle2D(12 + (frame * 34), 36, WIDTH, HEIGHT);
+		}
+		else if (isShooting)
+		{
+			//frame = (int)(tickCount / 4) % 2;
+			return new Rectangle2D(12 + (frame * 34), 36 + 34 + 8, WIDTH, HEIGHT);
 		}
 		else
 		{
