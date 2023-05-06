@@ -55,26 +55,29 @@ public class Ball extends ElementWithGravity
 	}
 
 	protected BallSize ballSize = BallSize.BIG;
+	protected BallColor ballColor = BallColor.RED;
 
 	public Ball()
 	{
-		this(BallSize.getRandom(), 0, 0, 0, 0);
+		this(BallSize.getRandom(), 0, 0);
 	}
 
-	public Ball(double x, double y, double w, double h)
+	public Ball(double x, double y)
 	{
-		this(BallSize.getRandom(), x, y, w, h);
+		this(BallSize.getRandom(), x, y);
 	}
 
-	public Ball(BallSize ballSize, double x, double y, double w, double h)
+	public Ball(BallSize ballSize, double x, double y)
 	{
-		this(ballSize, BallColor.getRandom(), x, y, w, h);
+		this(ballSize, BallColor.getRandom(), x, y);
 	}
 
-	public Ball(BallSize ballSize, BallColor ballColor, double x, double y, double w, double h)
+	public Ball(BallSize ballSize, BallColor ballColor, double x, double y)
 	{
 		super();
 		this.ballSize = ballSize;
+		this.ballColor = ballColor;
+
 		setRectangle(new Rectangle2D(x, y, ballSize.w, ballSize.h));
 		setImageCoordinates(new Rectangle2D(ballSize.x, ballSize.y + ballColor.yOffset, ballSize.w, ballSize.h));
 		setImage(Resources.getInstance().getImage("ballons"));
@@ -87,7 +90,40 @@ public class Ball extends ElementWithGravity
 			if (activeVerticalGravity) vy += gy;
 			if (activeHorizontalGravity) vx += gx;
 		}
+
+		// Limit speed.
+		double limit = 5.0;
+		Point2D speed = new Point2D(vx, vy);
+		if (speed.magnitude() > limit)
+		{
+			speed = speed.normalize().multiply(limit);
+			vx = speed.getX();
+			vy = speed.getY();
+		}
+
 		setPosition(getRectangle().getMinX() + vx, getRectangle().getMinY() + vy);
+	}
+
+	public Ball[] explode()
+	{
+		Ball[] ret = new Ball[2];
+
+		if (ballSize != BallSize.TINY)
+		{
+			BallSize descType = ballSize == BallSize.BIG ? BallSize.MEDIUM : (ballSize == BallSize.MEDIUM ? BallSize.SMALL : BallSize.TINY);
+			ret[0] = new Ball(descType, ballColor, x - (ballSize.w / 2), y);
+			ret[1] = new Ball(descType, ballColor, x + (ballSize.w / 2), y);
+			ret[0].setSpeed(-0.1 + vx, vy);
+			ret[1].setSpeed(0.1 + vx, vy);
+			ret[0].activeVerticalGravity = activeVerticalGravity;
+			ret[1].activeVerticalGravity = activeVerticalGravity;
+			ret[0].setVerticalGravity(gy);
+			ret[1].setVerticalGravity(gy);
+			ret[0].start();
+			ret[1].start();
+		}
+
+		return ret;
 	}
 
 	public double getRadiusAtAngle(double angle)

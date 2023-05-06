@@ -44,19 +44,31 @@ public class Resources {
         load();
     }
 
-    private void load() {
+    private void load()
+	{
         this.imagenes = new HashMap<>();
         this.sonidos = new HashMap<>();
         ClassLoader classLoader = getClass().getClassLoader();
-        //cargar las imagenes
-        for (int i = 0; i < this.path_imagenes.length; i++) {
+		
+        for (int i = 0; i < this.path_imagenes.length; i++)
+		{
             this.imagenes.put(this.path_imagenes[i][0], new Image(classLoader.getResource(this.path_imagenes[i][1]).toString()));
         }
-        for (int i = 0; i < this.path_sonidos.length; i++) {
 
-            this.sonidos.put(this.path_sonidos[i][0], new MediaPlayer(new Media(classLoader.getResource(this.path_sonidos[i][1]).toString())));
+        for (int i = 0; i < this.path_sonidos.length; i++)
+		{
+			String path = this.path_sonidos[i][1];
+			var url = classLoader.getResource(path).toString();
+			try
+			{
+				var mediaPlayer = new MediaPlayer(new Media(url));
+				this.sonidos.put(this.path_sonidos[i][0], mediaPlayer);
+			}
+			catch (Exception ex)
+			{
+				System.out.println("Error loading " + url + "\n" + ex.getMessage());
+			}
         }
-
     }
 
     public static Resources getInstance() {

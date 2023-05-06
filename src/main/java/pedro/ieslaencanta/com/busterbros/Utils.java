@@ -93,6 +93,7 @@ public class Utils
 		for (Collision col : colList)
 		{
 			if (col.getA() == a && col.getB() == b) return true;
+			if (col.getB() == a && col.getA() == b) return true; // Experimental.
 		}
 
 		return false;

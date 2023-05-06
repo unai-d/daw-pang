@@ -23,6 +23,12 @@ public abstract class ElementMovable extends ElementDynamic implements IMovable
 		vy = moveVector.getY();
 	}
 
+	public void addSpeed(double x, double y)
+	{
+		vx += x;
+		vy += y;
+	}
+
 	@Override
 	public void stopMovement()
 	{

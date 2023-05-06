@@ -36,29 +36,29 @@ public class Physics
 		{
 			return true;
 		}
-		if (a instanceof Ball && !(b instanceof ViewportLimits)) // Ball -> !Viewport
-		{
-			var aBall = (Ball)a;
+		// if (a instanceof Ball && !(b instanceof ViewportLimits)) // Ball -> !Viewport
+		// {
+		// 	var aBall = (Ball)a;
 			
-			double vx = aBall.getXSpeed();
-			double vy = aBall.getYSpeed();
-			double vmag = new Point2D(vx, vy).magnitude();
-			Point2D finalSpeedVec = distanceVector.normalize().multiply(-vmag); // No friction.
-			//System.out.println(finalSpeedVec.magnitude());
+		// 	double vx = aBall.getXSpeed();
+		// 	double vy = aBall.getYSpeed();
+		// 	double vmag = new Point2D(vx, vy).magnitude();
+		// 	Point2D finalSpeedVec = distanceVector.normalize().multiply(-vmag); // No friction.
+		// 	//System.out.println(finalSpeedVec.magnitude());
 
-			if (b instanceof Brick)
-			{
-				finalSpeedVec = Utils.squarifyAngle(finalSpeedVec, 2.0);
-			}
+		// 	if (b instanceof Brick)
+		// 	{
+		// 		finalSpeedVec = Utils.squarifyAngle(finalSpeedVec, 2.0);
+		// 	}
 
-			System.out.println(vx + ", " + vy + " -> " + finalSpeedVec);
+		// 	System.out.println(vx + ", " + vy + "\t\t" + finalSpeedVec);
 
-			aBall.setSpeed(finalSpeedVec.getX(), finalSpeedVec.getY());
-			for (int i = 0; aBall.getRectangle().intersects(b.getRectangle()) && i < 4; i++)
-			{
-				aBall.move(finalSpeedVec.getX(), finalSpeedVec.getY());
-			}
-		}
+		// 	aBall.setSpeed(finalSpeedVec.getX(), finalSpeedVec.getY());
+		// 	for (int i = 0; aBall.getRectangle().intersects(b.getRectangle()) && i < 4; i++)
+		// 	{
+		// 		aBall.move(finalSpeedVec.getX(), finalSpeedVec.getY());
+		// 	}
+		// }
 		else if (a instanceof ElementMovable)
 		{
 			var amov = (ElementMovable)a;
@@ -103,8 +103,10 @@ public class Physics
 			{
 				// Do nothing.
 			}
-			else if (!(aIsPlayer && ((Player)a).getClimbingLadderMode()) && (b instanceof Brick || b instanceof BreakableBrick))
+			else if (!(aIsPlayer && ((Player)a).getClimbingLadderMode()) && (b instanceof Brick || b instanceof BreakableBrick)) // Non-climbing player -> Brick
 			{
+				boolean aIsBall = !aIsPlayer;
+
 				var ax1 = amov.getX();
 				var ax2 = ax1 + amov.getWidth();
 				var bx1 = b.getX();
@@ -123,21 +125,33 @@ public class Physics
 				var newYCenter = Utils.clamp(ac.getY(), by1, by2);
 				var newDistanceVector = new Point2D(newXCenter, newYCenter).subtract(ac);
 				distanceVector = distanceVector.interpolate(newDistanceVector, 0.95);
-				if (distanceVector.magnitude() > 0.01)
+				double distance = distanceVector.magnitude();
+				if (distance > 0.01)
 				{
 					var intersection = Utils.intersection(a.getRectangle(), b.getRectangle());
 					var smallerWidth = Math.min(a.getWidth(), b.getWidth());
 					var smallerHeight = Math.min(a.getHeight(), b.getHeight());
-					var pushAngle = distanceVector.angle(new Point2D(1.0, 0.0)) / 180.0 * Math.PI;
-					pushAngle = Utils.squarifyAngle(pushAngle, 4.0);
-					Point2D pushVec = new Point2D(-Math.cos(pushAngle), -Math.sin(pushAngle));
-					pushVec.multiply(distanceVector.magnitude());
+					
+					Point2D pushVec = Utils.squarifyAngle(distanceVector, 4.0).multiply(-1);
 					c.setPushVectors(pushVec, null);
 
-					double xlerp = 2.0 * pushVec.getX() * (intersection.getWidth() / smallerWidth);
-					double ylerp = 2.0 * pushVec.getY() * (intersection.getHeight() / smallerHeight);
-
-					amov.setSpeed(xlerp, ylerp, 0.5);
+					if (aIsBall)
+					{
+						pushVec = pushVec.normalize().multiply(distance);
+						amov.setSpeed(pushVec.getX(), pushVec.getY(), Utils.clamp(1.0 / distance, 0.1, 1.0));
+					}
+					else
+					{
+						double newX = pushVec.getX() * ((intersection.getWidth() / smallerWidth) / distance);
+						double newY = pushVec.getY() * ((intersection.getHeight() / smallerHeight) / distance);
+						//newY -= 0.25;
+	
+						amov.setSpeed(newX, newY, 0.5);
+						for (int i = 0; amov.getRectangle().intersects(b.getRectangle()) && i < 4; i++)
+						{
+							amov.move(newX, newY);
+						}
+					}
 					//System.out.println(bc.getY() + " -> " + ac.getY() + " = " + ylerp);
 				}
 				// else
@@ -148,8 +162,8 @@ public class Physics
 			else if (b instanceof ElementMovable)
 			{
 				var bmov = (ElementMovable)b;
-				Point2D adir = new Point2D(amov.getXSpeed(), bmov.getYSpeed());
-				Point2D bdir = new Point2D(bmov.getXSpeed(), bmov.getYSpeed());
+				// Point2D adir = new Point2D(amov.getXSpeed(), bmov.getYSpeed());
+				// Point2D bdir = new Point2D(bmov.getXSpeed(), bmov.getYSpeed());
 
 				if (c.getASurfacePoint().isPresent() && c.getBSurfacePoint().isPresent())
 				{
@@ -158,9 +172,9 @@ public class Physics
 					var radii = aSurface.magnitude() + bSurface.magnitude();
 					var distanceGap = distanceVector.magnitude() - radii;
 					var magnitude = radii / distanceVector.magnitude();
-					magnitude = Utils.clamp(magnitude, -1.0, 1.0);
+					magnitude = Utils.clamp(1.0 / magnitude, -1.0, 1.0);
 					distanceVector = distanceVector.multiply(magnitude);
-					System.out.println(distanceVector.magnitude() + " - " + radii + " = " + distanceGap + " fac " + (magnitude));
+					System.out.println("[PHY] [EMOV→EMOV] " + distanceVector.magnitude() + " - " + radii + " = " + distanceGap + " fac " + magnitude);
 				}
 
 				//amov.setSpeed(bdir.getX(), bdir.getY(), 0.1);

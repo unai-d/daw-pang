@@ -12,6 +12,7 @@ import pedro.ieslaencanta.com.busterbros.basic.ElementBullet;
 public class FixedHook extends ElementBullet
 {
 	double lifespan = 0.0;
+	boolean isStuck = false;
 
 	public FixedHook(Player player)
 	{
@@ -38,25 +39,41 @@ public class FixedHook extends ElementBullet
 		{
 			markedForDeletion = true;
 		}
-		if (lifespan > (timeToLive / 2))
+		if (!isStuck)
 		{
-			y += 2;
-			resizeHeight(-2);
-		}
-		else
-		{
-			y -= 2;
-			resizeHeight(2);
-		}
+			if (lifespan > (timeToLive / 2))
+			{
+				y += 2;
+				resizeHeight(-2);
+			}
+			else
+			{
+				y -= 2;
+				resizeHeight(2);
+			}
 
-		imageUv = getDynamicImageCoordinates();
+			imageUv = getDynamicImageCoordinates();
+			
+			if (y <= 8) setStuckState(true);
+		}
+	}
+
+	public boolean getStuckState()
+	{
+		return isStuck;
+	}
+
+	public void setStuckState(boolean isStuck)
+	{
+		this.isStuck = isStuck;
+		if (isStuck) lifespan = 0.0;
 	}
 
 	private Rectangle2D getDynamicImageCoordinates()
 	{
 		int frame = Utils.clamp(((int)height - 34), 0, 192);
 		if (frame >= 23) frame++;
-		//double rec = frame / 191.0;
+		
 		int row = frame / 24;
 		int column = frame % 24;
 		double facX = (frame % 24.0) / 24.0;

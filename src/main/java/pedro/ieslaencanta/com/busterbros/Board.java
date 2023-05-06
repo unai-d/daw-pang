@@ -18,13 +18,12 @@ import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
 import pedro.ieslaencanta.com.busterbros.basic.ElementBullet;
 import pedro.ieslaencanta.com.busterbros.basic.ElementDynamic;
-import pedro.ieslaencanta.com.busterbros.basic.ElementMovable;
 import pedro.ieslaencanta.com.busterbros.basic.Level;
-import pedro.ieslaencanta.com.busterbros.basic.Weapon;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Ball;
 import pedro.ieslaencanta.com.busterbros.basic.elements.BreakableBrick;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Brick;
 import pedro.ieslaencanta.com.busterbros.basic.elements.FixedCrossbow;
+import pedro.ieslaencanta.com.busterbros.basic.elements.FixedHook;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Ladder;
 import pedro.ieslaencanta.com.busterbros.basic.elements.Player;
 import pedro.ieslaencanta.com.busterbros.basic.elements.ViewportLimits;
@@ -46,7 +45,7 @@ public class Board implements IKeyListener
     private final Dimension2D original_size;
 
     private boolean debug;
-	private boolean physicsEnabled = true;
+	private boolean debugPhysics = true;
     private boolean left_press, right_press, up_press, down_press;
     private Level levels[];
     private int actual_level = -1;
@@ -151,9 +150,9 @@ public class Board implements IKeyListener
 		for (; i < fi.length + ballCount; i++)
 		{
 			double x = Math.random() * App.WIDTH;
-			double y = Math.random() * App.HEIGHT;
+			double y = Math.random() * (App.HEIGHT / 4.0);
 
-			Ball b = new Ball(x, y, 0, 0);
+			Ball b = new Ball(x, y);
 			b.activeVerticalGravity();
 			b.setVerticalGravity(0.25);
 			b.start();
@@ -220,14 +219,14 @@ public class Board implements IKeyListener
 				var lheDynamic = (ElementDynamic)lhe;
 				lheDynamic.update();
 
-				for (var rhe : elements)
+				for (int j = 0; j < elements.length; j++)
 				{
+					var rhe = elements[j];
+
 					if (lhe == rhe) continue;
 					if (rhe == null) continue;
-					if (Utils.elementsExistInCollisionList(collisionDataList, rhe, lhe))
-					{
-						continue;
-					}
+
+					if (Utils.elementsExistInCollisionList(collisionDataList, rhe, lhe)) continue;
 
 					var collisionData = lheDynamic.collision(rhe);
 					if (collisionData.isPresent())
@@ -236,10 +235,10 @@ public class Board implements IKeyListener
 						collisionDataList.add(col);
 
 						// Update objects status based on collision data.
-						if (physicsEnabled)
-						{
+						//if (physicsEnabled)
+						//{
 							Physics.updatePhysics(col);
-						}
+						//}
 
 						// Player-specific events (e. g.: ladder climbing).
 						if (lhe == player)
@@ -249,6 +248,29 @@ public class Board implements IKeyListener
 								playerIsInsideLadder = true;
 								if (up_press || down_press) player.setClimbingLadderMode(true);
 							}
+						}
+
+						// Weapon/bullet events.
+						if ((lhe instanceof ElementBullet && rhe instanceof Ball) || (lhe instanceof Ball && rhe instanceof ElementBullet))
+						{
+							boolean lheIsBullet = lhe instanceof ElementBullet;
+							
+							Ball ball = (Ball)(lheIsBullet ? rhe : lhe);
+							Ball[] newBalls = ball.explode();
+
+							// Add/replace balls.
+							elements[lheIsBullet ? j : i] = newBalls[0];
+							if (newBalls[1] != null) addElement(newBalls[1]);
+
+							// Remove ElementBullet.
+							elements[lheIsBullet ? i : j] = null;
+						}
+
+						if (lhe instanceof FixedHook && rhe instanceof Brick)
+						{
+							var fixedHook = (FixedHook)lhe;
+							if (!fixedHook.getStuckState())
+								fixedHook.setStuckState(true);
 						}
 					}
 				}
@@ -260,6 +282,19 @@ public class Board implements IKeyListener
 			player.setClimbingLadderMode(false);
 		}
     }
+
+	private boolean addElement(Element element)
+	{
+		for (int i = 0; i < elements.length; i++)
+		{
+			if (elements[i] == null) 
+			{
+				elements[i] = element;
+				return true;
+			}
+		}
+		return false;
+	}
 
     private void render()
 	{
@@ -279,13 +314,16 @@ public class Board implements IKeyListener
             }
         }
 
-		int i = 0;
-		for (var col : collisionDataList)
+		if (debugPhysics)
 		{
-			col.debug(gc);
-			gc.setLineWidth(1.0);
-			gc.setStroke(Color.WHITE);
-			gc.strokeText(col.toString(), 8, ++i * 12);
+			int i = 0;
+			for (var col : collisionDataList)
+			{
+				col.debug(gc);
+				gc.setLineWidth(1.0);
+				gc.setStroke(Color.WHITE);
+				gc.strokeText(col.toString(), 16, 16 + ++i * 12);
+			}
 		}
     }
 
@@ -393,7 +431,7 @@ public class Board implements IKeyListener
 				break;
 
 			case P:
-				physicsEnabled = !physicsEnabled;
+				debugPhysics = !debugPhysics;
 				break;
 
 			default:

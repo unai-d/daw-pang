@@ -141,7 +141,7 @@ public class Player extends ElementWithGravity
 
 	public void setClimbingLadderMode(boolean isClimbingLadder)
 	{
-		System.out.println(isClimbingLadder ? "Climbing ladder." : "NOT climbing ladder.");
+		if (climbingLadder != isClimbingLadder) System.out.println(isClimbingLadder ? "Climbing ladder." : "NOT climbing ladder.");
 		climbingLadder = isClimbingLadder;
 		activeVerticalGravity = !climbingLadder;
 		activeHorizontalGravity = !climbingLadder;
