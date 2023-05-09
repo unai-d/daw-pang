@@ -73,6 +73,11 @@ public class Utils
 		return getGauge(nv.getX() / 2 + 1, size) + " " + getGauge(nv.getY() / 2.0 + 1.0, size);
 	}
 
+	public static String toString(Point2D p)
+	{
+		return String.format("[X%.2f Y%.2f M%.2f]", p.getX(), p.getY(), p.magnitude());
+	}
+
 	public static Rectangle2D intersection(Rectangle2D r1, Rectangle2D r2)
 	{
 		if (r1.getMaxX() < r2.getMinX() || r1.getMaxY() < r2.getMinY()) return new Rectangle2D(0, 0, 0, 0);

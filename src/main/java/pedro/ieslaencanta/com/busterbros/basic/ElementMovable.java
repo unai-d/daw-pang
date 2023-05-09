@@ -18,6 +18,12 @@ public abstract class ElementMovable extends ElementDynamic implements IMovable
 	@Override
 	public void setSpeed(double x, double y, double lerp)
 	{
+		if (lerp > 1.0)
+		{
+			vx = x * lerp;
+			vy = y * lerp;
+			return;
+		}
 		var moveVector = new Point2D(vx, vy).interpolate(new Point2D(x, y), lerp);
 		vx = moveVector.getX();
 		vy = moveVector.getY();

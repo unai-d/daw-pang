@@ -52,7 +52,16 @@ public class Resources {
 		
         for (int i = 0; i < this.path_imagenes.length; i++)
 		{
-            this.imagenes.put(this.path_imagenes[i][0], new Image(classLoader.getResource(this.path_imagenes[i][1]).toString()));
+			String path = this.path_imagenes[i][1];
+			String url = classLoader.getResource(path).toString();
+			try
+			{
+            	this.imagenes.put(this.path_imagenes[i][0], new Image(url));
+			}
+			catch (Exception ex)
+			{
+				System.out.println("Error loading " + url + "\n" + ex.getMessage());
+			}
         }
 
         for (int i = 0; i < this.path_sonidos.length; i++)

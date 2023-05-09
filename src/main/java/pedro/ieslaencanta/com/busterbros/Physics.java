@@ -83,13 +83,13 @@ public class Physics
 						{
 							double newYSpeed = -amov.getYSpeed();
 							//newYSpeed -= 0.25;
-							//System.out.println(amov.getYSpeed() + " -> " + newYSpeed);
+							//System.out.println("[PHY] [BALL→VWPT] " + amov.getYSpeed() + " -> " + newYSpeed);
 							amov.setYSpeed(newYSpeed);
 						}
 					}
 					if ((c.getUserData() & 0b0110) != 0) // Collided with left/right boundaries.
 					{
-						double newXSpeed = amov.getXSpeed() * -0.98;
+						double newXSpeed = -amov.getXSpeed();
 						//System.out.println(amov.getYSpeed() + " -> " + newXSpeed);
 						amov.setXSpeed(newXSpeed);
 					}
@@ -135,22 +135,33 @@ public class Physics
 					Point2D pushVec = Utils.squarifyAngle(distanceVector, 4.0).multiply(-1);
 					c.setPushVectors(pushVec, null);
 
+					double newX;
+					double newY;
+
 					if (aIsBall)
 					{
 						pushVec = pushVec.normalize().multiply(distance);
-						amov.setSpeed(pushVec.getX(), pushVec.getY(), Utils.clamp(1.0 / distance, 0.1, 1.0));
+						newX = pushVec.getX();
+						newY = pushVec.getY();
+						double lerp = Utils.clamp(Utils.area(intersection) / distance, 0.01, 2.0);
+						amov.setSpeed(newX, newY, lerp);
+						System.out.println("[PHY] [BALL→BRCK] A2B=" + Utils.toString(distanceVector) + " Push=" + Utils.toString(pushVec) + " Lerp=" + lerp);
 					}
 					else
 					{
-						double newX = pushVec.getX() * ((intersection.getWidth() / smallerWidth) / distance);
-						double newY = pushVec.getY() * ((intersection.getHeight() / smallerHeight) / distance);
-						//newY -= 0.25;
+						newX = 4.0 * pushVec.getX() * ((intersection.getWidth() / smallerWidth) / distance);
+						newY = 4.0 * pushVec.getY() * ((intersection.getHeight() / smallerHeight) / distance);
 	
 						amov.setSpeed(newX, newY, 0.5);
-						for (int i = 0; amov.getRectangle().intersects(b.getRectangle()) && i < 4; i++)
-						{
-							amov.move(newX, newY);
-						}
+					}
+
+					newX /= 64.0;
+					newY /= 64.0;
+					for (int i = 0; amov.getRectangle().intersects(b.getRectangle()) && i < 6; i++)
+					{
+						amov.move(newX, newY);
+						newX *= 2;
+						newY *= 2;
 					}
 					//System.out.println(bc.getY() + " -> " + ac.getY() + " = " + ylerp);
 				}
@@ -162,23 +173,19 @@ public class Physics
 			else if (b instanceof ElementMovable)
 			{
 				var bmov = (ElementMovable)b;
-				// Point2D adir = new Point2D(amov.getXSpeed(), bmov.getYSpeed());
-				// Point2D bdir = new Point2D(bmov.getXSpeed(), bmov.getYSpeed());
 
 				if (c.getASurfacePoint().isPresent() && c.getBSurfacePoint().isPresent())
 				{
 					var aSurface = c.getASurfacePoint().get();
 					var bSurface = c.getBSurfacePoint().get();
 					var radii = aSurface.magnitude() + bSurface.magnitude();
-					var distanceGap = distanceVector.magnitude() - radii;
-					var magnitude = radii / distanceVector.magnitude();
-					magnitude = Utils.clamp(1.0 / magnitude, -1.0, 1.0);
+					double distance = distanceVector.magnitude();
+					var distanceGap = radii - distance;
+					var magnitude = (radii / distance) - 1.0;
+					magnitude = Utils.clamp(magnitude, 0.1, 10.0);
 					distanceVector = distanceVector.multiply(magnitude);
-					System.out.println("[PHY] [EMOV→EMOV] " + distanceVector.magnitude() + " - " + radii + " = " + distanceGap + " fac " + magnitude);
+					System.out.println("[PHY] [EMOV→EMOV] " + radii + " - " + distance + " = " + distanceGap + " fac " + magnitude);
 				}
-
-				//amov.setSpeed(bdir.getX(), bdir.getY(), 0.1);
-				//bmov.setSpeed(adir.getX(), adir.getY(), 0.1);
 
 				amov.setSpeed(-distanceVector.getX(), -distanceVector.getY(), aIsPlayer ? 0.01 : 0.05);
 				bmov.setSpeed(distanceVector.getX(), distanceVector.getY(), 0.05);

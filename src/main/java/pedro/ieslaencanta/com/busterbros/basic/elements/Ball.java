@@ -92,7 +92,7 @@ public class Ball extends ElementWithGravity
 		}
 
 		// Limit speed.
-		double limit = 5.0;
+		double limit = 10.0;
 		Point2D speed = new Point2D(vx, vy);
 		if (speed.magnitude() > limit)
 		{
