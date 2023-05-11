@@ -18,10 +18,7 @@ public class Physics
 	{
 		if (!updatePhysicsImpl(c, false))
 		{
-			if (!updatePhysicsImpl(c, true))
-			{
-				//System.out.println("Collision between generics.");
-			}
+			updatePhysicsImpl(c, true);
 		}
 	}
 
@@ -31,16 +28,18 @@ public class Physics
 		var b = reversed ? c.getA() : c.getB();
 		var c1 = a.getCenter();
 		var c2 = b.getCenter();
-		var distanceVector = c2.subtract(c1);
+		var distanceVector = new Point2D(c2.getX() - c1.getX(), c2.getY() - c1.getY());
 
 		if (b instanceof Ladder || b instanceof ElementBullet)
 		{
+			// Those types don't have collisions.
 			return true;
 		}
 		else if (a instanceof ElementMovable)
 		{
 			var amov = (ElementMovable)a;
 			boolean aIsPlayer = a instanceof Player;
+			boolean bIsPlayer = b instanceof Player;
 
 			if (b instanceof ViewportLimits)
 			{
@@ -59,17 +58,12 @@ public class Physics
 						}
 						else
 						{
-							double newYSpeed = -amov.getYSpeed();
-							//newYSpeed -= 0.25;
-							//System.out.println("[PHY] [BALL→VWPT] " + amov.getYSpeed() + " -> " + newYSpeed);
-							amov.setYSpeed(newYSpeed);
+							amov.setYSpeed(-amov.getYSpeed());
 						}
 					}
 					if ((c.getUserData() & 0b1100) != 0) // Collided with left and/or right boundaries.
 					{
-						double newXSpeed = -amov.getXSpeed();
-						//System.out.println(amov.getYSpeed() + " -> " + newXSpeed);
-						amov.setXSpeed(newXSpeed);
+						amov.setXSpeed(-amov.getXSpeed());
 					}
 				}
 				else
@@ -83,7 +77,7 @@ public class Physics
 			}
 			else if (a instanceof Ball && b instanceof Ball)
 			{
-				// Disable ball to ball collision temporarily.
+				// Disable ball to ball collision.
 			}
 			else if (a instanceof Ball && b instanceof Brick)
 			{
@@ -153,12 +147,8 @@ public class Physics
 					}
 					//System.out.println(bc.getY() + " -> " + ac.getY() + " = " + ylerp);
 				}
-				// else
-				// {
-				// 	System.out.println("Error: direction vector too short: " + distanceVector);
-				// }
 			}
-			else if (b instanceof ElementMovable)
+			else if (b instanceof ElementMovable) // This is unused.
 			{
 				var bmov = (ElementMovable)b;
 
@@ -168,15 +158,15 @@ public class Physics
 					var bSurface = c.getBSurfacePoint().get();
 					var radii = aSurface.magnitude() + bSurface.magnitude();
 					double distance = distanceVector.magnitude();
-					var distanceGap = radii - distance;
+					var penetration = radii - distance; // This shouldn't be a negative value.
 					var magnitude = (radii / distance) - 1.0;
 					magnitude = Utils.clamp(magnitude, 0.0, 10.0);
 					distanceVector = distanceVector.multiply(magnitude);
-					System.out.println("[PHY] [EMOV→EMOV] " + radii + " - " + distance + " = " + distanceGap + " fac " + magnitude);
+					System.out.println("[PHY] [EMOV→EMOV] " + radii + " - " + distance + " = " + penetration + " fac " + magnitude);
 				}
 
 				amov.setSpeed(-distanceVector.getX(), -distanceVector.getY(), aIsPlayer ? 0.01 : 0.05);
-				bmov.setSpeed(distanceVector.getX(), distanceVector.getY(), 0.05);
+				bmov.setSpeed(distanceVector.getX(), distanceVector.getY(), bIsPlayer ? 0.01 : 0.05);
 			}
 
 			return true;

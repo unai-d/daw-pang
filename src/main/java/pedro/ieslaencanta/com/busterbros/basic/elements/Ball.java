@@ -92,7 +92,7 @@ public class Ball extends ElementWithGravity
 		}
 
 		// Limit speed.
-		double limit = 10.0;
+		double limit = 20.0;
 		Point2D speed = new Point2D(vx, vy);
 		if (speed.magnitude() > limit)
 		{
@@ -101,7 +101,7 @@ public class Ball extends ElementWithGravity
 			vy = speed.getY();
 		}
 
-		setPosition(getRectangle().getMinX() + vx, getRectangle().getMinY() + vy);
+		move(vx, vy);
 	}
 
 	public Ball[] explode()
@@ -133,7 +133,7 @@ public class Ball extends ElementWithGravity
 
 	public Point2D getSurfacePositionAtAngle(double angle)
 	{
-		return new Point2D(Math.cos(angle) * ballSize.w / 2, Math.sin(angle) * ballSize.h / 2);
+		return new Point2D(Math.cos(angle) * (ballSize.w / 2), Math.sin(angle) * (ballSize.h / 2));
 	}
 
 	@Override
@@ -143,22 +143,20 @@ public class Ball extends ElementWithGravity
 
 		var c1 = getCenter();
 		var c2 = e.getCenter();
-		var distanceVector = c1.subtract(c2);
+		var distanceVector = c2.subtract(c1);
 		double angle = distanceVector.angle(new Point2D(1, 0));
-		angle = angle / 180 * Math.PI; // DEG to RAD.
+		//System.out.println(Utils.toStringGraph(distanceVector) + "\n DEG: " + angle);
+		angle = angle / 180.0 * Math.PI; // DEG to RAD.
 
 		// Ball -> Ball
 		if (e instanceof Ball)
 		{
 			Ball eBall = (Ball)e;
 			var r1 = getRadiusAtAngle(angle);
-			var r2 = eBall.getRadiusAtAngle(angle);
+			var r2 = eBall.getRadiusAtAngle(angle + Math.PI);
 			if (r1 + r2 > distanceVector.magnitude())
 			{
 				ret = new Collision(this, e);
-				Point2D aSurface = getSurfacePositionAtAngle(angle);
-				Point2D bSurface = eBall.getSurfacePositionAtAngle(angle);
-				ret.setSurfacePoints(aSurface, bSurface);
 			}
 		}
 		else if (e instanceof ViewportLimits)

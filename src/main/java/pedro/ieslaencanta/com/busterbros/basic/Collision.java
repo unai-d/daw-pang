@@ -7,12 +7,15 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import pedro.ieslaencanta.com.busterbros.Game;
 import pedro.ieslaencanta.com.busterbros.Utils;
+import pedro.ieslaencanta.com.busterbros.basic.elements.Ball;
 
 public class Collision
 {
 	private Element a;
 	private Element b;
+	private Point2D distanceVector = Point2D.ZERO;
 	private double distance = 0.0;
+	private double angle = 0.0;
 	private Optional<Point2D> aSurface = Optional.empty();
 	private Optional<Point2D> bSurface = Optional.empty();
 	private Optional<Point2D> aPushVector = Optional.empty();
@@ -33,8 +36,8 @@ public class Collision
 	{
 		setA(a);
 		setB(b);
-		updateDistance();
 		this.userData = userData;
+		updateData();
 	}
 
 	public Element getA()
@@ -77,12 +80,27 @@ public class Collision
 		distance = d;
 	}
 
-	private void updateDistance()
+	private void updateData()
 	{
 		if (a == null || b == null) return;
 		var c1 = a.getCenter();
 		var c2 = b.getCenter();
-		distance = c1.distance(c2);
+		distanceVector = new Point2D(c2.getX() - c1.getX(), c2.getY() - c1.getY()); // `subtract` method only returns positive values.
+		distance = distanceVector.magnitude();
+		angle = distanceVector.angle(new Point2D(1, 0)) / 180.0 * Math.PI;
+
+		if (a instanceof Ball)
+		{
+			Ball aBall = (Ball)a;
+			Point2D aSurface = aBall.getSurfacePositionAtAngle(angle);
+			this.aSurface = Optional.of(aSurface);
+		}
+		if (b instanceof Ball)
+		{
+			Ball bBall = (Ball)b;
+			Point2D bSurface = bBall.getSurfacePositionAtAngle(angle + Math.PI);
+			this.bSurface = Optional.of(bSurface);
+		}
 	}
 
 	public Optional<Point2D> getASurfacePoint()
@@ -97,14 +115,14 @@ public class Collision
 
 	public void setSurfacePoints(Point2D a, Point2D b)
 	{
-		aSurface = Optional.of(a);
-		bSurface = Optional.of(b);
+		aSurface = a != null ? Optional.of(a) : Optional.empty();
+		bSurface = b != null ? Optional.of(b) : Optional.empty();
 	}
 
 	public void setPushVectors(Point2D a, Point2D b)
 	{
-		if (a != null) aPushVector = Optional.of(a);
-		if (b != null) bPushVector = Optional.of(b);
+		aPushVector = a != null ? Optional.of(a) : Optional.empty();
+		bPushVector = b != null ? Optional.of(b) : Optional.empty();
 	}
 	
 	public void debug(GraphicsContext gc)
@@ -119,18 +137,23 @@ public class Collision
 			b.getCenterY() * Game.SCALE
 		);
 
-		if (aSurface.isPresent() && bSurface.isPresent())
+		if (aSurface.isPresent() || bSurface.isPresent())
 		{
-			gc.setFill(Color.rgb(255, 64, 64));
+			gc.setFill(Color.rgb(255, 0, 255));
 
-			gc.fillOval(
-				(a.getCenterX() + aSurface.get().getX()) * Game.SCALE - 4,
-				(a.getCenterY() + aSurface.get().getY()) * Game.SCALE - 4,
-				8,
-				8
-			);
+			if (aSurface.isPresent())
+			{
+				gc.fillOval(
+					(a.getCenterX() + aSurface.get().getX()) * Game.SCALE - 4,
+					(a.getCenterY() + aSurface.get().getY()) * Game.SCALE - 4,
+					8,
+					8
+				);
 
-			gc.fillOval(
+				System.out.println(Utils.toStringGraph(aSurface.get()));
+			}
+
+			if (bSurface.isPresent()) gc.fillOval(
 				(b.getCenterX() + bSurface.get().getX()) * Game.SCALE - 4,
 				(b.getCenterY() + bSurface.get().getY()) * Game.SCALE - 4,
 				8,
@@ -138,18 +161,33 @@ public class Collision
 			);
 		}
 
-		if (aPushVector.isPresent())
+		if (aPushVector.isPresent() || bPushVector.isPresent())
 		{
-			Point2D aPushVectorNorm = aPushVector.get().normalize().multiply(16.0);
-
 			gc.setStroke(Color.rgb(255, 0, 255));
 
-			gc.strokeLine(
-				a.getCenterX() * Game.SCALE,
-				a.getCenterY() * Game.SCALE,
-				(a.getCenterX() + aPushVectorNorm.getX()) * Game.SCALE,
-				(a.getCenterY() + aPushVectorNorm.getY()) * Game.SCALE
-			);
+			if (aPushVector.isPresent())
+			{
+				Point2D aPushVectorNorm = aPushVector.get().normalize().multiply(16.0);
+
+				gc.strokeLine(
+					a.getCenterX() * Game.SCALE,
+					a.getCenterY() * Game.SCALE,
+					(a.getCenterX() + aPushVectorNorm.getX()) * Game.SCALE,
+					(a.getCenterY() + aPushVectorNorm.getY()) * Game.SCALE
+				);
+			}
+
+			if (bPushVector.isPresent())
+			{
+				Point2D bPushVectorNorm = aPushVector.get().normalize().multiply(16.0);
+
+				gc.strokeLine(
+					b.getCenterX() * Game.SCALE,
+					b.getCenterY() * Game.SCALE,
+					(b.getCenterX() + bPushVectorNorm.getX()) * Game.SCALE,
+					(b.getCenterY() + bPushVectorNorm.getY()) * Game.SCALE
+				);
+			}
 		}
 
 		Utils.renderRectangleBorder(gc, Color.RED, Utils.intersection(a.getRectangle(), b.getRectangle()));

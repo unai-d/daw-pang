@@ -82,9 +82,7 @@ public class FixedHook extends ElementBullet
 		int rowMinHeight = (row == 0) ? 34 : (row == 1 ? 86 : 140);
 
 		double x = 8 + (column * 17);
-		double y = rowStart;
-
-		y += (1.0 - facX) * (rowHeight - rowMinHeight);
+		double y = rowStart + (1.0 - facX) * (rowHeight - rowMinHeight);
 		return new Rectangle2D(x, y, 9, height);
 	}
 }

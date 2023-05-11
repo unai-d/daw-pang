@@ -5,6 +5,7 @@ import java.util.Optional;
 import javax.crypto.spec.RC2ParameterSpec;
 
 import javafx.geometry.Rectangle2D;
+import javafx.scene.canvas.GraphicsContext;
 import pedro.ieslaencanta.com.busterbros.App;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
@@ -44,5 +45,11 @@ public class ViewportLimits extends Element
 		}
 
 		return (exteriorCollisions > 0) ? Optional.of(new Collision(this, e, i)) : Optional.empty();
+	}
+
+	@Override
+	public void paint(GraphicsContext gc)
+	{
+		return;
 	}
 }

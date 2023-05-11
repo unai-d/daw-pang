@@ -1,6 +1,6 @@
 package pedro.ieslaencanta.com.busterbros;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
@@ -70,12 +70,48 @@ public class Utils
 	public static String getGauge(Point2D value, int size)
 	{
 		Point2D nv = value.normalize();
-		return getGauge(nv.getX() / 2 + 1, size) + " " + getGauge(nv.getY() / 2.0 + 1.0, size);
+		return getGauge((nv.getX() + 1.0) / 2.0, size) + " " + getGauge((nv.getY() + 1.0) / 2.0, size);
 	}
 
 	public static String toString(Point2D p)
 	{
 		return String.format("[X%.2f Y%.2f M%.2f]", p.getX(), p.getY(), p.magnitude());
+	}
+
+	public static String toStringGraph(Point2D p)
+	{
+		StringBuffer[] ret = new StringBuffer[]
+		{
+			new StringBuffer("┌───────────────┐"), // Inner space is 15×5.
+			new StringBuffer("│               │"), 
+			new StringBuffer("│               │"),
+			new StringBuffer("│               │"),
+			new StringBuffer("│               │"),
+			new StringBuffer("│               │"),
+			new StringBuffer("└───────────────┘")
+		};
+
+		Point2D increment = p.normalize().multiply(1.0 / 16.0);
+		Point2D currentPos = new Point2D(0, 0);
+		for (int i = 0; i < 16; i++)
+		{
+			int x = 8 + (int)(currentPos.getX() * 8);
+			int y = 3 + (int)(currentPos.getY() * 3);
+			if (x > 0 && x < ret[0].length() && y > 0 && y < ret.length)
+			{
+				ret[y].setCharAt(x, 'X');
+			}
+
+			//System.out.println(Utils.toString(currentPos) + " -> " + x + " " + y);
+			currentPos = currentPos.add(increment);
+		}
+
+		String retstr = "";
+		for (var strbld : ret)
+		{
+			retstr += strbld.toString() + "\n";
+		}
+		return retstr + Utils.toString(p);
 	}
 
 	public static Rectangle2D intersection(Rectangle2D r1, Rectangle2D r2)
@@ -93,12 +129,15 @@ public class Utils
 		return new Rectangle2D(x, y, w, h);
 	}
 
-	public static boolean elementsExistInCollisionList(ArrayList<Collision> colList, Element a, Element b)
+	public static boolean elementsExistInCollisionList(List<Collision> colList, Element a, Element b)
 	{
 		for (Collision col : colList)
 		{
-			if (col.getA() == a && col.getB() == b) return true;
-			if (col.getB() == a && col.getA() == b) return true; // Experimental.
+			if ((col.getA() == a && col.getB() == b) ||
+				(col.getB() == a && col.getA() == b))
+			{
+				return true;
+			}
 		}
 
 		return false;

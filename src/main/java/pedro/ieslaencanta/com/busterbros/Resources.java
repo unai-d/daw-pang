@@ -53,29 +53,29 @@ public class Resources {
         for (int i = 0; i < this.path_imagenes.length; i++)
 		{
 			String path = this.path_imagenes[i][1];
-			String url = classLoader.getResource(path).toString();
 			try
 			{
+				String url = classLoader.getResource(path).toString();
             	this.imagenes.put(this.path_imagenes[i][0], new Image(url));
 			}
 			catch (Exception ex)
 			{
-				System.out.println("Error loading " + url + "\n" + ex.getMessage());
+				System.out.println("Error loading '" + path + "'\n" + ex.getMessage());
 			}
         }
 
         for (int i = 0; i < this.path_sonidos.length; i++)
 		{
 			String path = this.path_sonidos[i][1];
-			var url = classLoader.getResource(path).toString();
 			try
 			{
+				var url = classLoader.getResource(path).toString();
 				var mediaPlayer = new MediaPlayer(new Media(url));
 				this.sonidos.put(this.path_sonidos[i][0], mediaPlayer);
 			}
 			catch (Exception ex)
 			{
-				System.out.println("Error loading " + url + "\n" + ex.getMessage());
+				System.out.println("Error loading '" + path + "'\n" + ex.getMessage());
 			}
         }
     }
