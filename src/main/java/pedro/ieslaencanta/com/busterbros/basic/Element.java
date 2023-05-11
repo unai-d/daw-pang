@@ -106,6 +106,11 @@ public class Element implements IDebuggable, IDrawable
         this.color = color;
     }
 
+	public Point2D getPosition()
+	{
+		return new Point2D(x, y);
+	}
+
     public Rectangle2D getRectangle()
 	{
         return new Rectangle2D(x, y, width, height);

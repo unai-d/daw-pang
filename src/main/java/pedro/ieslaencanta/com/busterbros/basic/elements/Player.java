@@ -27,6 +27,8 @@ public class Player extends ElementWithGravity
 	private boolean lookingAtLeft = false;
 	private boolean climbingLadder = false;
 	private boolean isShooting = false;
+	private int health = 3;
+	private int damageCooldown = 0;
 
 	public Player(double x, double y)
 	{
@@ -110,6 +112,9 @@ public class Player extends ElementWithGravity
 			if (activeVerticalGravity) vy += gy;
 			if (activeHorizontalGravity) vx += gx;
 		}
+
+		// Update damage cooldown counter.
+		if (damageCooldown > 0) damageCooldown--;
 	}
 
 	@Override
@@ -121,7 +126,7 @@ public class Player extends ElementWithGravity
 			return;
 		}
 
-		gc.drawImage(
+		if ((damageCooldown / 2) % 2 == 0) gc.drawImage(
 			image,
 			lookingAtLeft ? imageUv.getMaxX() : imageUv.getMinX(),
 			imageUv.getMinY(),
@@ -160,6 +165,15 @@ public class Player extends ElementWithGravity
 		if ((Math.abs(px) + Math.abs(py)) > 0.1)
 		{
 			isShooting = false;
+		}
+	}
+
+	public void dealDamage(int amount)
+	{
+		if (damageCooldown < 1)
+		{
+			health -= amount;
+			damageCooldown = 50;
 		}
 	}
 

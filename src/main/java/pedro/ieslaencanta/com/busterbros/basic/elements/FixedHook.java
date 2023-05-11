@@ -39,6 +39,7 @@ public class FixedHook extends ElementBullet
 		{
 			markedForDeletion = true;
 		}
+		
 		if (!isStuck)
 		{
 			if (lifespan > (timeToLive / 2))
@@ -52,10 +53,10 @@ public class FixedHook extends ElementBullet
 				resizeHeight(2);
 			}
 
-			imageUv = getDynamicImageCoordinates();
-			
 			if (y <= 8) setStuckState(true);
 		}
+
+		imageUv = getDynamicImageCoordinates();
 	}
 
 	public boolean getStuckState()
@@ -71,6 +72,11 @@ public class FixedHook extends ElementBullet
 
 	private Rectangle2D getDynamicImageCoordinates()
 	{
+		if (isStuck)
+		{
+			return new Rectangle2D(399, 1103, 9, height);
+		}
+
 		int frame = Utils.clamp(((int)height - 34), 0, 192);
 		if (frame >= 23) frame++;
 		

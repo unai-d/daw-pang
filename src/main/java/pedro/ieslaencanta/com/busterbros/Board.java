@@ -10,6 +10,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
+import pedro.ieslaencanta.com.busterbros.basic.Animation;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
 import pedro.ieslaencanta.com.busterbros.basic.ElementBullet;
@@ -45,6 +46,8 @@ public class Board implements IKeyListener
 	private int currentLevel = -1;
 	private MediaPlayer backgroundsound;
 	private Element[] elements;
+	/** Currently playing animations. */
+	private List<Animation> animations = new ArrayList<>();
 	private Player player;
 
 	private List<Collision> collisionDataList = new ArrayList<Collision>();
@@ -92,6 +95,8 @@ public class Board implements IKeyListener
 
 	private void createElementsLevel()
 	{
+		animations.clear();
+
 		int ballCount = 1 + (int)(Math.random() * 5);
 
 		Pair<Level.ElementType, Rectangle2D>[] fi = this.levels[this.currentLevel].getFigures();
@@ -240,6 +245,10 @@ public class Board implements IKeyListener
 								if (up_press || down_press) player.setClimbingLadderMode(true);
 							}
 						}
+						if (rhe instanceof Player && lhe instanceof Ball)
+						{
+							player.dealDamage(1);
+						}
 
 						// Weapon/bullet events.
 						if ((lhe instanceof ElementBullet && rhe instanceof Ball) || (lhe instanceof Ball && rhe instanceof ElementBullet))
@@ -261,6 +270,16 @@ public class Board implements IKeyListener
 						{
 							if (rhe instanceof BreakableBrick)
 							{
+								BreakableBrick bbrhe = (BreakableBrick)rhe;
+
+								var animationOpt = Animation.getAnimation(bbrhe.getExplosionAnimationName());
+								if (animationOpt.isPresent())
+								{
+									Animation animation = animationOpt.get();
+									animation.setPosition(rhe.getPosition());
+									animations.add(animation);
+								}
+
 								elements[j] = null;
 							}
 							else
@@ -280,6 +299,16 @@ public class Board implements IKeyListener
 		if (!playerIsInsideLadder && player.getClimbingLadderMode())
 		{
 			player.setClimbingLadderMode(false);
+		}
+
+		for (int i = 0; i < animations.size(); i++)
+		{
+			Animation animation = animations.get(i);
+			animation.update();
+			if (animation.isMarkedForDeletion())
+			{
+				animations.remove(animation);
+			}
 		}
 	}
 
@@ -313,6 +342,11 @@ public class Board implements IKeyListener
 					this.elements[i].debug(gc);
 				}
 			}
+		}
+
+		for (Animation animation : animations)
+		{
+			animation.render(gc);
 		}
 
 		if (debugPhysics)

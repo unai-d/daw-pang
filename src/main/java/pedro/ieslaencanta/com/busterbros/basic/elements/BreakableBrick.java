@@ -11,4 +11,9 @@ public class BreakableBrick extends Brick
 	{
 		super(x, y, width, height);
 	}
+
+	public String getExplosionAnimationName()
+	{
+		return String.format("brick_%dx%d_ex", (int)width / 8, (int)height / 8);
+	}
 }

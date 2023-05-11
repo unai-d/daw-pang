@@ -133,8 +133,8 @@ public class Utils
 	{
 		for (Collision col : colList)
 		{
-			if ((col.getA() == a && col.getB() == b) ||
-				(col.getB() == a && col.getA() == b))
+			if ((col.getA() == a && col.getB() == b) /*||
+				(col.getB() == a && col.getA() == b)*/)
 			{
 				return true;
 			}
