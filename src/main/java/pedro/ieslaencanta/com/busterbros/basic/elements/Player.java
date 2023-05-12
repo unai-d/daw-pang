@@ -8,6 +8,7 @@ import pedro.ieslaencanta.com.busterbros.Clock;
 import pedro.ieslaencanta.com.busterbros.Game;
 import pedro.ieslaencanta.com.busterbros.Resources;
 import pedro.ieslaencanta.com.busterbros.State;
+import pedro.ieslaencanta.com.busterbros.Utils;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
 import pedro.ieslaencanta.com.busterbros.basic.ElementDynamic;
@@ -19,15 +20,18 @@ public class Player extends ElementWithGravity
 {
 	public static final double WIDTH = 30;
 	public static final double HEIGHT = 32;
+	public static final double MAX_PLAYER_SPEED = 3.0;
 
 	private Weapon weapon;
 	private double px = 0;
 	private double py = 0;
+	private double pxs = 0;
 
 	private boolean lookingAtLeft = false;
 	private boolean climbingLadder = false;
 	private boolean isShooting = false;
-	private int health = 3;
+	private int health = 10;
+	private int score = 0;
 	private int damageCooldown = 0;
 
 	public Player(double x, double y)
@@ -103,9 +107,6 @@ public class Player extends ElementWithGravity
 		setPosition(newX, newY);
 		setImageCoordinates(getPlayerImageCoordinates());
 
-		// Prepare values for next tick (including gravity).
-		px = 0; py = 0;
-
 		// Update gravity.
 		if (state == State.STARTED)
 		{
@@ -139,14 +140,14 @@ public class Player extends ElementWithGravity
 		);
 	}
 
-	public boolean getClimbingLadderMode()
+	public boolean isClimbingALadder()
 	{
 		return climbingLadder;
 	}
 
-	public void setClimbingLadderMode(boolean isClimbingLadder)
+	public void setIfIsClimbingALadder(boolean isClimbingLadder)
 	{
-		if (climbingLadder != isClimbingLadder) System.out.println(isClimbingLadder ? "Climbing ladder." : "NOT climbing ladder.");
+		//if (climbingLadder != isClimbingLadder) System.out.println(isClimbingLadder ? "Climbing ladder." : "NOT climbing ladder.");
 		climbingLadder = isClimbingLadder;
 		activeVerticalGravity = !climbingLadder;
 		activeHorizontalGravity = !climbingLadder;
@@ -155,17 +156,29 @@ public class Player extends ElementWithGravity
 
 	public void moveAsPlayerInput(double x, double y)
 	{
-		if (!getClimbingLadderMode()) y = 0;
+		if (isClimbingALadder())
+		{
+			px = x * 2;
+			py = y * 2;
+		}
+		else
+		{
+			pxs = Utils.lerp(pxs, x, 0.25);
+			px = pxs * MAX_PLAYER_SPEED;
+			py = 0;
+		}
 
-		px = x;
-		py = y;
-
-		move(x, y);
+		move(px, py);
 
 		if ((Math.abs(px) + Math.abs(py)) > 0.1)
 		{
 			isShooting = false;
 		}
+	}
+
+	public int getHealth()
+	{
+		return health;
 	}
 
 	public void dealDamage(int amount)
@@ -175,6 +188,21 @@ public class Player extends ElementWithGravity
 			health -= amount;
 			damageCooldown = 50;
 		}
+	}
+
+	public int getScore()
+	{
+		return score;
+	}
+
+	public void setScore(int score)
+	{
+		this.score = score;
+	}
+
+	public void addScore(int score)
+	{
+		this.score += score;
 	}
 
 	private Rectangle2D getPlayerImageCoordinates()
@@ -191,8 +219,7 @@ public class Player extends ElementWithGravity
 		}
 		else if (isShooting)
 		{
-			//frame = (int)(tickCount / 4) % 2;
-			return new Rectangle2D(12 + (frame * 34), 36 + 34 + 8, WIDTH, HEIGHT);
+			return new Rectangle2D(12 + (frame * 34), 76, WIDTH, HEIGHT);
 		}
 		else
 		{

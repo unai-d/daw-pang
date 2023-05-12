@@ -15,6 +15,7 @@ public class Element implements IDebuggable, IDrawable
     private boolean debug;
     //protected Rectangle2D rectangle;
 	protected double x = 0, y = 0, width = 0, height = 0;
+	@Deprecated
     protected Color color;
 	protected Rectangle2D imageUv;
 	protected Image image;

@@ -8,9 +8,9 @@ package pedro.ieslaencanta.com.busterbros;
  *
  * @author Administrador
  */
-public abstract class Clock implements Runnable {
-
-    protected int frecuency;
+public abstract class Clock implements Runnable
+{
+    protected int frequency;
     protected int delta;
     protected static long counter;
     protected long time;
@@ -18,16 +18,18 @@ public abstract class Clock implements Runnable {
     protected Clock.ClockState state;
     private static final Object lock = new Object();
 
-    public enum ClockState {
+    public enum ClockState
+	{
         STARTED,
         STOPED,
         PAUSED,
         CLOSED
     }
 
-    public Clock(int frecuency) {
-        this.frecuency = frecuency;
-        this.delta = (int) ((1.0f / (float) frecuency) * 1000);
+    public Clock(int frecuency)
+	{
+        this.frequency = frecuency;
+        updateDelta();
         this.time = System.currentTimeMillis();
         this.state = ClockState.STOPED;
     }
@@ -87,7 +89,7 @@ public abstract class Clock implements Runnable {
     public void run()
 	{
         long actual;
-        while (this.state != ClockState.CLOSED)
+        while (this.state == ClockState.STARTED)
 		{
             actual = System.currentTimeMillis();
             if (actual - this.time > this.delta)
@@ -106,23 +108,29 @@ public abstract class Clock implements Runnable {
                 }
             }
         }
-
+		System.exit(0);
     }
 
     /**
      * incrementa la frecuencia
      */
-    public void incFrecuency() {
-        this.frecuency++;
-        this.delta = (int) (1.0f / (float) frecuency) * 100;
+    public void incrementFrequency()
+	{
+        this.frequency++;
+        updateDelta();
     }
 
     /**
      * decrementa la frecuenca
      */
-    public void decFrencuecy() {
-        this.frecuency--;
-        this.delta = (int) (1.0f / (float) frecuency) * 100;
+    public void decrementFrequency()
+	{
+        this.frequency--;
+        updateDelta();
     }
 
+	private void updateDelta()
+	{
+		delta = (int)(1000.0 / frequency);
+	}
 }

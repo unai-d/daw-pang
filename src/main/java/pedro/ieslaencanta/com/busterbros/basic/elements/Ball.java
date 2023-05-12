@@ -6,6 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import pedro.ieslaencanta.com.busterbros.Resources;
 import pedro.ieslaencanta.com.busterbros.State;
+import pedro.ieslaencanta.com.busterbros.Utils;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
 import pedro.ieslaencanta.com.busterbros.basic.ElementWithGravity;
@@ -92,11 +93,12 @@ public class Ball extends ElementWithGravity
 		}
 
 		// Limit speed.
-		double limit = 20.0;
+		double limit = 10.0;
 		Point2D speed = new Point2D(vx, vy);
 		if (speed.magnitude() > limit)
 		{
-			speed = speed.normalize().multiply(limit);
+			double interpolatedSpeed = Utils.lerp(speed.magnitude(), limit, 0.1);
+			speed = speed.normalize().multiply(interpolatedSpeed);
 			vx = speed.getX();
 			vy = speed.getY();
 		}
@@ -136,6 +138,18 @@ public class Ball extends ElementWithGravity
 		return new Point2D(Math.cos(angle) * (ballSize.w / 2), Math.sin(angle) * (ballSize.h / 2));
 	}
 
+	public int getScoreValue()
+	{
+		switch (ballSize)
+		{
+			case TINY: return 100;
+			case SMALL: return 200;
+			case MEDIUM: return 500;
+			case BIG: return 1000;
+		}
+		return 0;
+	}
+
 	@Override
 	public Optional<Collision> collision(Element e)
 	{
@@ -170,5 +184,15 @@ public class Ball extends ElementWithGravity
 		}
 		
 		return ret != null ? Optional.of(ret) : Optional.empty();
+	}
+
+	public String getExplosionAnimationName()
+	{
+		return String.format("ball_%s_ex", ballSize.toString().toLowerCase());
+	}
+
+	public BallColor getBallColor()
+	{
+		return ballColor;
 	}
 }

@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.geometry.Dimension2D;
+import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.input.KeyCode;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
@@ -35,36 +37,40 @@ import pedro.ieslaencanta.com.busterbros.basic.elements.ViewportLimits;
  */
 public class Board implements IKeyListener
 {
-	private GraphicsContext gc;
-	private GraphicsContext bggc;
+	private GraphicsContext gc = null;
+	private GraphicsContext bggc = null;
 	private final Dimension2D original_size;
 
+	// Debug mode control.
 	private boolean debug = false;
 	private boolean debugPhysics = false;
+
 	private boolean left_press, right_press, up_press, down_press;
 	private Level levels[];
 	private int currentLevel = -1;
-	private MediaPlayer backgroundsound;
+	private MediaPlayer bgmPlayer;
 	private Element[] elements;
 	/** Currently playing animations. */
 	private List<Animation> animations = new ArrayList<>();
-	private Player player;
+	private Player player = null;
 
 	private List<Collision> collisionDataList = new ArrayList<Collision>();
 
 	public Board(Dimension2D original)
 	{
-		this.gc = null;
 		this.original_size = original;
 		this.right_press = false;
 		this.left_press = false;
 		this.up_press = false;
 		this.down_press = false;
+		bgmPlayer = Resources.getInstance().getSound("fondo");
+		bgmPlayer.setVolume(0.1);
+		bgmPlayer.play();
 
-		this.currentLevel = 12;
+		currentLevel = 12;
 
-		this.createLevels();
-		this.nextLevel();
+		createLevels();
+		nextLevel();
 	}
 
 	private void createLevels()
@@ -166,13 +172,15 @@ public class Board implements IKeyListener
 
 		i++;
 		this.elements[i] = new ViewportLimits(8, 8, App.WIDTH - 16, App.HEIGHT - 16);
+
+		// Some levels contain obstacles right where the player spawns.
+		if (currentLevel == 20) player.move(0, -player.getHeight());
 	}
 
 	public void setGraphicsContext(GraphicsContext gc)
 	{
 		this.gc = gc;
 		this.gc.setImageSmoothing(false);
-		this.gc.clearRect(0, 0, App.WIDTH * Game.SCALE, App.HEIGHT * Game.SCALE);
 	}
 
 	public void setBackGroundGraphicsContext(GraphicsContext gc)
@@ -242,28 +250,60 @@ public class Board implements IKeyListener
 							if (rhe instanceof Ladder) // Player is on ladder.
 							{
 								playerIsInsideLadder = true;
-								if (up_press || down_press) player.setClimbingLadderMode(true);
+								if (up_press || down_press) player.setIfIsClimbingALadder(true);
 							}
 						}
+						// Ball hit the player.
 						if (rhe instanceof Player && lhe instanceof Ball)
 						{
 							player.dealDamage(1);
+							if (player.getHealth() < 1)
+							{
+								player = null;
+								elements[j] = null;
+								continue;
+							}
 						}
 
-						// Weapon/bullet events.
+						// Bullet hit a ball.
 						if ((lhe instanceof ElementBullet && rhe instanceof Ball) || (lhe instanceof Ball && rhe instanceof ElementBullet))
 						{
 							boolean lheIsBullet = lhe instanceof ElementBullet;
 							
+							ElementBullet bullet = (ElementBullet)(lheIsBullet ? lhe : rhe);
 							Ball ball = (Ball)(lheIsBullet ? rhe : lhe);
 							Ball[] newBalls = ball.explode();
+
+							bullet.markForDeletion();
 
 							// Add/replace balls.
 							elements[lheIsBullet ? j : i] = newBalls[0];
 							if (newBalls[1] != null) addElement(newBalls[1]);
 
-							// Remove ElementBullet.
+							// Remove `ElementBullet`.
 							elements[lheIsBullet ? i : j] = null;
+
+							// Update player score.
+							player.addScore(ball.getScoreValue());
+
+							// Add ball explosion animation.
+							var animationOpt = Animation.getAnimation(ball.getExplosionAnimationName());
+							if (animationOpt.isPresent())
+							{
+								Animation animation = animationOpt.get();
+								animation.setPosition(ball.getPosition());
+
+								// Change hue.
+								ColorAdjust colorAdjust = new ColorAdjust();
+								switch (ball.getBallColor())
+								{
+									case GREEN: colorAdjust.setHue(0.222); break;
+									case BLUE: colorAdjust.setHue(0.444); break;
+								}
+								animation.addEffect(colorAdjust);
+
+								animations.add(animation);
+							}
 						}
 
 						if (lhe instanceof FixedHook && rhe instanceof Brick)
@@ -296,9 +336,9 @@ public class Board implements IKeyListener
 			}
 		}
 
-		if (!playerIsInsideLadder && player.getClimbingLadderMode())
+		if (player != null && !playerIsInsideLadder && player.isClimbingALadder())
 		{
-			player.setClimbingLadderMode(false);
+			player.setIfIsClimbingALadder(false);
 		}
 
 		for (int i = 0; i < animations.size(); i++)
@@ -314,6 +354,8 @@ public class Board implements IKeyListener
 
 	private boolean addElement(Element element)
 	{
+		if (element == null) return true;
+
 		for (int i = 0; i < elements.length; i++)
 		{
 			if (elements[i] == null) 
@@ -360,16 +402,42 @@ public class Board implements IKeyListener
 				gc.strokeText(col.toString(), 16, 16 + ++i * 12);
 			}
 		}
+
+		// Render bottom screen text and icons.
+		gc.setStroke(Color.WHITE);
+		if (player != null)
+		{
+			int player1Score = player.getScore();
+			String player1ScoreStr = Integer.toString(player1Score);
+
+			Utils.renderText(gc, new Point2D(8 * 2, App.HEIGHT), "PLAYER-1");
+			Utils.renderText(gc, new Point2D(8 * (14 - player1ScoreStr.length()), App.HEIGHT + 8), player1ScoreStr);
+			for (int i = 0; i < Math.min(4, player.getHealth()); i++)
+			{
+				gc.drawImage(
+					Resources.getInstance().getImage("player"),
+					154,
+					44,
+					16,
+					16,
+					(i * 16) * Game.SCALE,
+					(App.HEIGHT + 16) * Game.SCALE,
+					16 * Game.SCALE,
+					16 * Game.SCALE);
+			}
+			Utils.renderText(gc, new Point2D(64, App.HEIGHT + 20), Integer.toString(player.getHealth()));
+		}
+		Utils.renderText(gc, new Point2D(8 * 19, App.HEIGHT), Resources.getInstance().getLevelName(currentLevel));
 	}
 
 	private void process_input()
 	{
 		double dx = left_press ? -1 : (right_press ? 1 : 0);
 		double dy = up_press ? -1 : (down_press ? 1 : 0);
-		dx *= 2;
-		dy *= 2;
+		//dx *= 2;
+		//dy *= 2;
 
-		player.moveAsPlayerInput(dx, dy);
+		if (player != null) player.moveAsPlayerInput(dx, dy);
 	}
 
 	/**
@@ -382,7 +450,7 @@ public class Board implements IKeyListener
 			0,
 			0,
 			this.original_size.getWidth() * Game.SCALE,
-			this.original_size.getHeight() * Game.SCALE
+			(this.original_size.getHeight() + Game.INFOAREA) * Game.SCALE
 		);
 	}
 
@@ -393,14 +461,8 @@ public class Board implements IKeyListener
 	{
 		if (this.bggc != null)
 		{
-			this.bggc.clearRect(0, 0, this.original_size.getWidth() * Game.SCALE, (this.original_size.getHeight() + Game.INFOAREA) * Game.SCALE);
 			this.bggc.setFill(Color.BLACK);
 			this.bggc.fillRect(0, 0, this.original_size.getWidth() * Game.SCALE, (this.original_size.getHeight() + Game.INFOAREA) * Game.SCALE);
-			
-			if (this.gc != null)
-			{
-				this.gc.clearRect(0, 0, this.original_size.getWidth() * Game.SCALE, (this.original_size.getHeight() + Game.INFOAREA) * Game.SCALE);
-			}
 
 			this.bggc.drawImage(
 				this.levels[currentLevel].getBackground(),
@@ -413,6 +475,11 @@ public class Board implements IKeyListener
 				this.original_size.getWidth() * Game.SCALE,
 				this.original_size.getHeight() * Game.SCALE
 			);
+		}
+
+		if (this.gc != null)
+		{
+			this.gc.clearRect(0, 0, this.original_size.getWidth() * Game.SCALE, (this.original_size.getHeight() + Game.INFOAREA) * Game.SCALE);
 		}
 	}
 
@@ -443,14 +510,7 @@ public class Board implements IKeyListener
 				break;
 
 			case SPACE:
-				for (int i = 0; i < elements.length; i++)
-				{
-					if (elements[i] == null)
-					{
-						elements[i] = this.player.shoot();
-						break;
-					}
-				}
+				if (player != null) addElement(player.shoot());
 				break;
 
 			case N:

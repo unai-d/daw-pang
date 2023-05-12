@@ -6,11 +6,19 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontSmoothingType;
+import javafx.scene.text.TextAlignment;
 import pedro.ieslaencanta.com.busterbros.basic.Collision;
 import pedro.ieslaencanta.com.busterbros.basic.Element;
 
 public class Utils
 {
+	public static double lerp(double v1, double v2, double t)
+	{
+		return (v1 * (1 - t)) + (v2 * t);
+	}
+
 	public static double clamp(double v, double min, double max)
 	{
 		return Math.max(min, Math.min(max, v));
@@ -159,5 +167,29 @@ public class Utils
 		gc.lineTo(x * Game.SCALE, (y + height) * Game.SCALE);
 		gc.closePath();
 		gc.stroke();
+	}
+
+	public static void renderText(GraphicsContext gc, Point2D target, String text)
+	{
+		renderText(gc, target.getX(), target.getY(), text);
+	}
+
+	public static void renderText(GraphicsContext gc, double targetX, double targetY, String text)
+	{
+		gc.setFontSmoothingType(FontSmoothingType.GRAY);
+		gc.setFont(new Font("MS PMincho", 16 * 1.5));
+		gc.setLineWidth(1.0);
+
+		double x = 0, y = 0;
+		for (int i = 0; i < text.length(); i++)
+		{
+			char c = text.charAt(i);
+			if (c == ' ') { x++; continue; }
+			else if (c == '\n') { x = 0; y++; continue; }
+			
+			gc.strokeText(new String(new char[] { c }), (targetX + (x * 8)) * Game.SCALE, 16 + (targetY + (y * 8)) * Game.SCALE);
+
+			x++;
+		}
 	}
 }

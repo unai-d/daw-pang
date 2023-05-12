@@ -14,36 +14,32 @@ import javafx.stage.WindowEvent;
 public class App extends Application
 {
 	private Game game;
-	private Canvas primer_plano;
-	private Canvas fondo;
+	private Canvas foregroundCanvas;
+	private Canvas backgroundCanvas;
 	private Scene scene;
 	public static final int WIDTH = 384;
 	public static final int HEIGHT = 208;
-	private int info = 48;
 
 	@Override
 	public void start(Stage stage)
 	{
-		//var javaVersion = SystemInfo.javaVersion();
-		//var javafxVersion = SystemInfo.javafxVersion();
+		foregroundCanvas = new Canvas(WIDTH * Game.SCALE, (HEIGHT + Game.INFOAREA) * Game.SCALE);
+		backgroundCanvas = new Canvas(WIDTH * Game.SCALE, (HEIGHT + Game.INFOAREA) * Game.SCALE);
 
-		primer_plano = new Canvas(WIDTH * Game.SCALE, (HEIGHT + Game.INFOAREA) * Game.SCALE); //Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
-		fondo = new Canvas(WIDTH * Game.SCALE, (HEIGHT + Game.INFOAREA) * Game.SCALE); //Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
-
-		Pane root = new Pane(fondo, primer_plano);
+		Pane root = new Pane(backgroundCanvas, foregroundCanvas);
 
 		scene = new Scene(root, WIDTH * Game.SCALE, (HEIGHT + Game.INFOAREA) * Game.SCALE);
-		this.game = new Game(primer_plano.getGraphicsContext2D(),
-			fondo.getGraphicsContext2D(),
+		this.game = new Game(foregroundCanvas.getGraphicsContext2D(),
+			backgroundCanvas.getGraphicsContext2D(),
 			new Dimension2D(WIDTH, HEIGHT));
 		this.registerKeys();
 		stage.setResizable(false);
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>()
 		{
 			@Override
-			public void handle(WindowEvent t) {
+			public void handle(WindowEvent t)
+			{
 				Platform.exit();
-				// game.stop();
 				System.exit(0);
 			}
 		});

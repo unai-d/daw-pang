@@ -102,7 +102,7 @@ public class Physics
 					aBall.move(aBall.getXSpeed(), aBall.getYSpeed());
 				}
 			}
-			else if (!(aIsPlayer && ((Player)a).getClimbingLadderMode()) && (b instanceof Brick || b instanceof BreakableBrick)) // Non-climbing player -> Brick
+			else if (!(aIsPlayer && ((Player)a).isClimbingALadder()) && (b instanceof Brick || b instanceof BreakableBrick)) // Non-climbing player -> Brick
 			{
 				var ax1 = amov.getX();
 				var ax2 = ax1 + amov.getWidth();

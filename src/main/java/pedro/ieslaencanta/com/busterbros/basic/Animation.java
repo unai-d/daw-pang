@@ -6,6 +6,8 @@ import java.util.Optional;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.Effect;
 import javafx.scene.image.Image;
 import pedro.ieslaencanta.com.busterbros.Game;
 import pedro.ieslaencanta.com.busterbros.Resources;
@@ -60,6 +62,29 @@ public class Animation implements Cloneable
 			new Rectangle2D(88, 622, 32, 8),
 			new Rectangle2D(128, 622, 32, 8),
 			new Rectangle2D(168, 622, 32, 8)
+		),
+		"ball_big_ex", new Animation("weapons",
+			new Rectangle2D(8, 784, 48, 40),
+			new Rectangle2D(56, 784, 48, 40),
+			new Rectangle2D(104, 784, 48, 40),
+			new Rectangle2D(152, 784, 48, 40)
+		),
+		"ball_medium_ex", new Animation("weapons",
+			new Rectangle2D(8, 727, 32, 26),
+			new Rectangle2D(40, 727, 32, 26),
+			new Rectangle2D(72, 727, 32, 26),
+			new Rectangle2D(104, 727, 32, 26)
+		),
+		"ball_small_ex", new Animation("weapons",
+			new Rectangle2D(8, 686, 16, 14),
+			new Rectangle2D(32, 686, 16, 14),
+			new Rectangle2D(48, 686, 16, 14),
+			new Rectangle2D(72, 686, 16, 14)
+		),
+		"ball_tiny_ex", new Animation("weapons",
+			new Rectangle2D(8, 653, 10, 8),
+			new Rectangle2D(20, 653, 10, 8),
+			new Rectangle2D(36, 653, 10, 8)
 		)
 	);
 
@@ -88,6 +113,8 @@ public class Animation implements Cloneable
 	Rectangle2D[] frames = {};
 	Point2D position = Point2D.ZERO;
 
+	Effect effect = null;
+
 	public Animation(String textureName, Rectangle2D... frames)
 	{
 		this.textureName = textureName;
@@ -112,6 +139,11 @@ public class Animation implements Cloneable
 
 	public void render(GraphicsContext gc)
 	{
+		//if (effect != null)
+		//{
+		//	gc.setEffect(effect);
+		//}
+
 		Image image = Resources.getInstance().getImage(textureName);
 		int currentFrame = (int)this.currentFrame;
 		if (currentFrame >= frames.length) return;
@@ -128,10 +160,17 @@ public class Animation implements Cloneable
 			imageUv.getWidth() * Game.SCALE,
 			imageUv.getHeight() * Game.SCALE
 		);
+
+		//gc.setEffect(null);
 	}
 
 	public boolean isMarkedForDeletion()
 	{
 		return currentFrame > frames.length;
+	}
+
+	public void addEffect(Effect effect)
+	{
+		this.effect = effect;
 	}
 }

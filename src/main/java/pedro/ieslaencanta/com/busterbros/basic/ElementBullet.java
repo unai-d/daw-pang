@@ -10,4 +10,9 @@ public abstract class ElementBullet extends ElementResizable
 	{
 		return markedForDeletion;
 	}
+
+	public void markForDeletion()
+	{
+		markedForDeletion = true;
+	}
 }
