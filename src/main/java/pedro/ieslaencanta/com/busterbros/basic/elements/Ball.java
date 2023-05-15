@@ -39,8 +39,8 @@ public class Ball extends ElementWithGravity
 	public enum BallColor
 	{
 		RED(0),
-		GREEN(50),
-		BLUE(99);
+		GREEN(99),
+		BLUE(50);
 
 		int yOffset;
 

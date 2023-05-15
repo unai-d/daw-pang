@@ -206,12 +206,14 @@ public class Board implements IKeyListener
 		collisionDataList.clear();
 
 		boolean playerIsInsideLadder = false;
+		boolean levelCleared = true;
 
 		for (int i = 0; i < elements.length; i++)
 		{
 			var lhe = elements[i];
 
 			if (lhe == null) continue;
+			// Handle bullets that want to stop existing.
 			if (lhe instanceof ElementBullet)
 			{
 				var lheBullet = (ElementBullet)lhe;
@@ -220,6 +222,11 @@ public class Board implements IKeyListener
 					elements[i] = null;
 					continue;
 				}
+			}
+			// Check if level is cleared (no more balls left).
+			if (levelCleared && lhe instanceof Ball)
+			{
+				levelCleared = false;
 			}
 			if (lhe instanceof ElementDynamic)
 			{
@@ -284,7 +291,7 @@ public class Board implements IKeyListener
 							elements[lheIsBullet ? i : j] = null;
 
 							// Update player score.
-							player.addScore(ball.getScoreValue());
+							if (player != null) player.addScore(ball.getScoreValue());
 
 							// Add ball explosion animation.
 							var animationOpt = Animation.getAnimation(ball.getExplosionAnimationName());
@@ -293,14 +300,15 @@ public class Board implements IKeyListener
 								Animation animation = animationOpt.get();
 								animation.setPosition(ball.getPosition());
 
-								// Change hue.
-								ColorAdjust colorAdjust = new ColorAdjust();
+								// Change animation color.
+								Point2D texOffset = Point2D.ZERO;
 								switch (ball.getBallColor())
 								{
-									case GREEN: colorAdjust.setHue(0.222); break;
-									case BLUE: colorAdjust.setHue(0.444); break;
+									case RED: texOffset = Point2D.ZERO; break;
+									case GREEN: texOffset = new Point2D(0, 128); break;
+									case BLUE: texOffset = new Point2D(0, 256); break;
 								}
-								animation.addEffect(colorAdjust);
+								animation.setImageUvOffset(texOffset);
 
 								animations.add(animation);
 							}
@@ -349,6 +357,12 @@ public class Board implements IKeyListener
 			{
 				animations.remove(animation);
 			}
+		}
+
+		if (levelCleared)
+		{
+			System.out.println("Level cleared.");
+			nextLevel();
 		}
 	}
 

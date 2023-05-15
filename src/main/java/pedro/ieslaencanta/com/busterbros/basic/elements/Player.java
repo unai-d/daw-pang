@@ -18,11 +18,12 @@ import pedro.ieslaencanta.com.busterbros.basic.Weapon;
 
 public class Player extends ElementWithGravity
 {
-	public static final double WIDTH = 30;
+	public static final double WIDTH = 32;
 	public static final double HEIGHT = 32;
 	public static final double MAX_PLAYER_SPEED = 3.0;
 
 	private Weapon weapon;
+
 	private double px = 0;
 	private double py = 0;
 	private double pxs = 0;
@@ -33,6 +34,7 @@ public class Player extends ElementWithGravity
 	private int health = 10;
 	private int score = 0;
 	private int damageCooldown = 0;
+	private int shootingCountdown = 0;
 
 	public Player(double x, double y)
 	{
@@ -88,6 +90,7 @@ public class Player extends ElementWithGravity
 	public ElementResizable shoot()
 	{
 		isShooting = true;
+		shootingCountdown = 10;
 		return weapon.shoot();
 	}
 
@@ -114,8 +117,9 @@ public class Player extends ElementWithGravity
 			if (activeHorizontalGravity) vx += gx;
 		}
 
-		// Update damage cooldown counter.
+		// Update counters.
 		if (damageCooldown > 0) damageCooldown--;
+		if (shootingCountdown > 0) shootingCountdown--;
 	}
 
 	@Override
@@ -219,13 +223,21 @@ public class Player extends ElementWithGravity
 		}
 		else if (isShooting)
 		{
-			return new Rectangle2D(12 + (frame * 34), 76, WIDTH, HEIGHT);
+			//return new Rectangle2D(12 + (frame * 34), 76, WIDTH, HEIGHT);
+			return new Rectangle2D(shootingCountdown > 0 ? 42 : 8, 112, WIDTH, HEIGHT);
 		}
 		else
 		{
-			if (Math.abs(px) > 0.1) frame = (int)(tickCount / 4) % 5;
-			lookingAtLeft = px < 0;
-			return new Rectangle2D(12 + (frame * 34), 2, WIDTH, HEIGHT);
+			if (Math.abs(px) > 0.1)
+			{
+				frame = (int)(tickCount / 4) % 5;
+				lookingAtLeft = px < 0;
+				return new Rectangle2D(12 + (frame * 34), 2, WIDTH, HEIGHT);
+			}
+			else
+			{
+				return new Rectangle2D(8, 112, WIDTH, HEIGHT);
+			}
 		}
 	}
 }

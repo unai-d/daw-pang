@@ -63,28 +63,28 @@ public class Animation implements Cloneable
 			new Rectangle2D(128, 622, 32, 8),
 			new Rectangle2D(168, 622, 32, 8)
 		),
-		"ball_big_ex", new Animation("weapons",
-			new Rectangle2D(8, 784, 48, 40),
-			new Rectangle2D(56, 784, 48, 40),
-			new Rectangle2D(104, 784, 48, 40),
-			new Rectangle2D(152, 784, 48, 40)
+		"ball_big_ex", new Animation("ball_explosions",
+			new Rectangle2D(0, 54, 48, 48),
+			new Rectangle2D(48, 54, 48, 48),
+			new Rectangle2D(94, 54, 48, 48),
+			new Rectangle2D(145, 54, 48, 48)
 		),
-		"ball_medium_ex", new Animation("weapons",
-			new Rectangle2D(8, 727, 32, 26),
-			new Rectangle2D(40, 727, 32, 26),
-			new Rectangle2D(72, 727, 32, 26),
-			new Rectangle2D(104, 727, 32, 26)
+		"ball_medium_ex", new Animation("ball_explosions",
+			new Rectangle2D(0, 23, 32, 32),
+			new Rectangle2D(34, 23, 32, 32),
+			new Rectangle2D(65, 24, 32, 32),
+			new Rectangle2D(103, 23, 32, 32)
 		),
-		"ball_small_ex", new Animation("weapons",
-			new Rectangle2D(8, 686, 16, 14),
-			new Rectangle2D(32, 686, 16, 14),
-			new Rectangle2D(48, 686, 16, 14),
-			new Rectangle2D(72, 686, 16, 14)
+		"ball_small_ex", new Animation("ball_explosions",
+			new Rectangle2D(0, 8, 16, 16),
+			new Rectangle2D(20, 8, 16, 16),
+			new Rectangle2D(40, 8, 16, 16),
+			new Rectangle2D(64, 8, 16, 16)
 		),
-		"ball_tiny_ex", new Animation("weapons",
-			new Rectangle2D(8, 653, 10, 8),
-			new Rectangle2D(20, 653, 10, 8),
-			new Rectangle2D(36, 653, 10, 8)
+		"ball_tiny_ex", new Animation("ball_explosions",
+			new Rectangle2D(0, 0, 8, 8),
+			new Rectangle2D(12, 0, 8, 8),
+			new Rectangle2D(28, 0, 10, 8)
 		)
 	);
 
@@ -113,7 +113,7 @@ public class Animation implements Cloneable
 	Rectangle2D[] frames = {};
 	Point2D position = Point2D.ZERO;
 
-	Effect effect = null;
+	Point2D frameOffset = Point2D.ZERO;
 
 	public Animation(String textureName, Rectangle2D... frames)
 	{
@@ -139,11 +139,6 @@ public class Animation implements Cloneable
 
 	public void render(GraphicsContext gc)
 	{
-		//if (effect != null)
-		//{
-		//	gc.setEffect(effect);
-		//}
-
 		Image image = Resources.getInstance().getImage(textureName);
 		int currentFrame = (int)this.currentFrame;
 		if (currentFrame >= frames.length) return;
@@ -151,8 +146,8 @@ public class Animation implements Cloneable
 
 		gc.drawImage(
 			image,
-			imageUv.getMinX(),
-			imageUv.getMinY(),
+			imageUv.getMinX() + frameOffset.getX(),
+			imageUv.getMinY() + frameOffset.getY(),
 			imageUv.getWidth(),
 			imageUv.getHeight(),
 			position.getX() * Game.SCALE,
@@ -160,8 +155,6 @@ public class Animation implements Cloneable
 			imageUv.getWidth() * Game.SCALE,
 			imageUv.getHeight() * Game.SCALE
 		);
-
-		//gc.setEffect(null);
 	}
 
 	public boolean isMarkedForDeletion()
@@ -169,8 +162,8 @@ public class Animation implements Cloneable
 		return currentFrame > frames.length;
 	}
 
-	public void addEffect(Effect effect)
+	public void setImageUvOffset(Point2D offset)
 	{
-		this.effect = effect;
+		frameOffset = offset;
 	}
 }

@@ -25,7 +25,8 @@ public class Resources {
         {"animals", "Animals.png"},
         {"weapons", "ItemsWeapons.png"},
         {"ballons", "Balloons.png"},
-        {"bricks", "Foreground.png"}
+        {"bricks", "Foreground.png"},
+		{"ball_explosions", "ball_explosions.png"}
 
     };
     private String path_sonidos[][] =
